@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Lancelot&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ancizar+Serif&display=swap');
+
+
+/* Custom utility classes with Tailwind */
+.auth-container {
+  @apply min-h-screen flex items-center justify-center bg-[#fefae0] font-sans;
+}
+
+.auth-box {
+  @apply relative w-full max-w-4xl h-[600px] bg-[#fefae0] rounded-2xl shadow-lg overflow-hidden;
+}
+
+.form-slider {
+  @apply absolute top-0 left-0 w-full h-full flex transition-transform duration-700 ease-in-out;
+}
+
+.form-left {
+  @apply w-1/2 h-full bg-[#fefae0] flex flex-col justify-center items-center px-10;
+}
+
+.auth-title {
+  @apply text-5xl font-bold text-[#3e1f0d] mb-9;
+}
+
+.auth-input {
+  @apply w-80 p-2 mb-3 rounded-md bg-[#bdbdbd] placeholder:text-[#3e1f0d];
+}
+
+.auth-social {
+  @apply flex gap-7 my-5;
+}
+
+.auth-button {
+  @apply bg-[#3e1f0d] text-[#fefae0] px-10 py-2 rounded-full text-base font-bold;
+}
+
+.auth-panel {
+  @apply absolute top-0 right-0 w-1/2 h-full bg-[#3e1f0d] text-[#fefae0] flex flex-col justify-center items-center rounded-bl-[100px] rounded-tl-[100px] p-10 z-10 transition-all duration-700;
+}
+
+.panel-button {
+  @apply bg-[#fefae0] text-[#3e1f0d] px-10 py-2 rounded-full text-base font-bold shadow;
+}
+
+.auth-input {
+  @apply w-80 p-2 pr-10 mb-3 rounded-md bg-[#bdbdbd] placeholder:text-[#3e1f0d];
+}
+
+.font-lancelot {
+  font-family: 'Lancelot', cursive;
+}
+
+.font-ancizar {
+  font-family: 'Ancizar Serif', serif;
+}
+
+
