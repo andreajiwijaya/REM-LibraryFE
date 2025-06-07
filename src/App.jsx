@@ -1,39 +1,61 @@
-// src/App.jsx
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import SignIn from './SignIn';
-import Layout from './Layout';
-import Home from './Home';
-import ManajemenBuku from './ManajemenBuku';
-import ManajemenAnggota from './ManajemenAnggota';
-import Peminjaman from './Peminjaman';
-import PinjamIni from './PinjamIni';
-import PengembalianIni from './KembaliIni';
-import Notifikasi from './Notifikasi';
-import Profile from './Profile';
+import SignIn from "./Pages/SignIn";
+
+// Admin
+import AdminHome from "./Admin/Home";
+import Kembalikan from "./Admin/KembaliIni";
+import ManajemenBuku from "./Admin/ManajemenBuku";
+import ManajemenAnggota from "./Admin/ManajemenAnggota";
+import Notifikasi from "./Admin/Notifikasi";
+import Peminjaman from "./Admin/Peminjaman";
+import PinjamIni from "./Admin/PinjamIni";
+import ProfileAdmin from "./Admin/Profile";
+
+// User
+import DashboardUser from "./User/Dashboard";
+import BukuDipinjam from "./User/BukuDipinjam";
+import DataBuku from "./User/DataBuku";
+import ProfilUser from "./User/Profil";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [role, setRole] = useState(null);
+
+  const handleLogin = (userRole) => {
+    setRole(userRole);
+  };
+
+  const handleLogout = () => {
+    setRole(null);
+  };
 
   return (
     <Router>
       <Routes>
-        {!isLoggedIn ? (
+        {!role ? (
           <>
-            <Route path="/signin" element={<SignIn onLogin={() => setIsLoggedIn(true)} />} />
+            <Route path="/signin" element={<SignIn onLogin={handleLogin} />} />
             <Route path="*" element={<Navigate to="/signin" replace />} />
+          </>
+        ) : role === "admin" ? (
+          <>
+            <Route path="/" element={<AdminHome onLogout={handleLogout} />} />
+            <Route path="/manajemen-buku" element={<ManajemenBuku />} />
+            <Route path="/manajemen-anggota" element={<ManajemenAnggota />} />
+            <Route path="/kembalikan" element={<Kembalikan />} />
+            <Route path="/notifikasi" element={<Notifikasi />} />
+            <Route path="/peminjaman" element={<Peminjaman />} />
+            <Route path="/pinjam" element={<PinjamIni />} />
+            <Route path="/profile-admin" element={<ProfileAdmin />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
           <>
-            <Route path="/" element={<Layout><Home /></Layout>} />
-            <Route path="/manajemen-buku" element={<ManajemenBuku />} />
-            <Route path="/manajemen-anggota" element={<ManajemenAnggota />} />
-            <Route path="/peminjaman" element={<Peminjaman />} />
-            <Route path="/peminjaman-hari-ini" element={<PinjamIni />} />
-            <Route path="/pengembalian-hari-ini" element={<PengembalianIni />} />
-            <Route path="/notifikasi" element={<Notifikasi />} />
-            <Route path="/profile" element={<Profile />} /> 
+            <Route path="/" element={<DashboardUser onLogout={handleLogout} />} />
+            <Route path="/user/buku" element={<DataBuku />} />
+            <Route path="/user/buku-dipinjam" element={<BukuDipinjam />} />
+            <Route path="/user/profil" element={<ProfilUser />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         )}
