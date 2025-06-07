@@ -1,21 +1,21 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {FaBook,FaUsers,FaHome,FaChartLine,FaCalendarAlt,
-  FaSearch,
-  FaBell,
+import {
+  FaBook,
+  FaUsers,
+  FaHome,
+  FaCalendarAlt,
   FaSignOutAlt,
   FaUserCircle,
 } from 'react-icons/fa';
-import "./index.css";
+import './index.css';
 
-function Layout({ children, hasNotification }) {
+function Layout({ children, onLogout }) {
   const navigate = useNavigate();
 
-  // Fungsi logout
   const handleLogout = () => {
-    // Contoh hapus token atau data user di localStorage
     localStorage.removeItem('token');
-    // Redirect ke halaman signin
+    onLogout(); // Perbarui status peran di App.jsx
     navigate('/signin');
   };
 
@@ -77,26 +77,8 @@ function Layout({ children, hasNotification }) {
         <header className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-bold font-ancizar text-[#3e1f0d]">{currentDate}</h2>
           <div className="flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#fff9e6]" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 rounded-full border bg-[#3e1f0d] text-[#fff9e6] focus:outline-none focus:ring-3 focus:ring-[#fff9e6]"
-              />
-            </div>
-
-            {/* Notification */}
-            <Link to="/notifikasi" className="relative p-2 text-2xl rounded-full hover:bg-[#3e1f0d]/10">
-              <FaBell className="text-[#3e1f0d]" />
-              {hasNotification && (
-                <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[#fff9e6]"></span>
-              )}
-            </Link>
-
             {/* Profile */}
-            <Link to="/profile" className="p-2 rounded-full hover:bg-[#3e1f0d]/10">
+            <Link to="/profile-admin" className="p-2 rounded-full hover:bg-[#3e1f0d]/10">
               <FaUserCircle className="text-[#3e1f0d] text-3xl" />
             </Link>
           </div>
@@ -113,20 +95,20 @@ function Home() {
   const stats = [
     { title: 'Total Buku', value: 1245, icon: <FaBook className="text-2xl" />, link: '/manajemen-buku' },
     { title: 'Anggota Aktif', value: 342, icon: <FaUsers className="text-2xl" />, link: '/manajemen-anggota' },
-    { title: 'Peminjaman Hari Ini', value: 28, icon: <FaCalendarAlt className="text-2xl" />, link: '/peminjaman-hari-ini' },
-    { title: 'Pengembalian Hari Ini', value: 15, icon: <FaChartLine className="text-2xl" />, link: '/pengembalian-hari-ini' }
+    { title: 'Peminjaman Hari Ini', value: 28, icon: <FaCalendarAlt className="text-2xl" />, link: '/pinjam' },
+    { title: 'Pengembalian Hari Ini', value: 15, icon: <FaCalendarAlt className="text-2xl" />, link: '/kembalikan' },
   ];
 
   const recentActivities = [
     { id: 1, user: 'Andi Setiawan', action: 'Meminjam buku "Clean Code"', time: '10 menit lalu' },
     { id: 2, user: 'Budi Santoso', action: 'Mengembalikan buku "React for Beginners"', time: '25 menit lalu' },
-    { id: 3, user: 'Citra Dewi', action: 'Memperpanjang pinjaman "JavaScript ES6"', time: '1 jam lalu' }
+    { id: 3, user: 'Citra Dewi', action: 'Memperpanjang pinjaman "JavaScript ES6"', time: '1 jam lalu' },
   ];
 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map(stat => (
+        {stats.map((stat) =>
           stat.link ? (
             <Link
               key={stat.title}
@@ -138,9 +120,7 @@ function Home() {
                   <p className="text-gray-500">{stat.title}</p>
                   <h3 className="text-3xl font-bold text-[#3e1f0d] mt-2">{stat.value}</h3>
                 </div>
-                <div className="p-3 rounded-full bg-[#3e1f0d]/10 text-[#3e1f0d]">
-                  {stat.icon}
-                </div>
+                <div className="p-3 rounded-full bg-[#3e1f0d]/10 text-[#3e1f0d]">{stat.icon}</div>
               </div>
             </Link>
           ) : (
@@ -153,20 +133,21 @@ function Home() {
                   <p className="text-gray-500">{stat.title}</p>
                   <h3 className="text-3xl font-bold text-[#3e1f0d] mt-2">{stat.value}</h3>
                 </div>
-                <div className="p-3 rounded-full bg-[#3e1f0d]/10 text-[#3e1f0d]">
-                  {stat.icon}
-                </div>
+                <div className="p-3 rounded-full bg-[#3e1f0d]/10 text-[#3e1f0d]">{stat.icon}</div>
               </div>
             </div>
           )
-        ))}
+        )}
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md flex-grow overflow-auto">
         <h3 className="text-xl font-semibold text-[#3e1f0d] mb-4">Aktivitas Terkini</h3>
         <div className="space-y-4">
-          {recentActivities.map(activity => (
-            <div key={activity.id} className="flex justify-between items-center pb-4 border-b border-gray-100 last:border-0">
+          {recentActivities.map((activity) => (
+            <div
+              key={activity.id}
+              className="flex justify-between items-center pb-4 border-b border-gray-100 last:border-0"
+            >
               <div>
                 <p className="font-medium text-[#3e1f0d]">{activity.user}</p>
                 <p className="text-gray-600">{activity.action}</p>
@@ -175,15 +156,17 @@ function Home() {
             </div>
           ))}
         </div>
-        <Link to="#" className="inline-block mt-4 text-[#3e1f0d] hover:underline">Lihat Semua</Link>
+        <Link to="#" className="inline-block mt-4 text-[#3e1f0d] hover:underline">
+          Lihat Semua
+        </Link>
       </div>
     </>
   );
 }
 
-export default function HomePageWrapper() {
+export default function HomePageWrapper({ onLogout }) {
   return (
-    <Layout hasNotification={true}>
+    <Layout onLogout={onLogout}>
       <Home />
     </Layout>
   );

@@ -43,22 +43,19 @@ export default function Peminjaman() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
 
-  // Fungsi untuk mengembalikan buku
   const returnBook = (id) => {
-    setLoans(loans.map(loan => 
-      loan.id === id ? {...loan, status: 'Dikembalikan', returnDate: new Date().toISOString().split('T')[0]} : loan
+    setLoans(loans.map(loan =>
+      loan.id === id ? { ...loan, status: 'Dikembalikan', returnDate: new Date().toISOString().split('T')[0] } : loan
     ));
   };
 
-  // Filter data pinjaman berdasarkan pencarian dan status
   const filteredLoans = loans.filter(loan => {
-    const matchesSearch = loan.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         loan.memberName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = loan.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.memberName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'Semua' || loan.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  // Hitung hari keterlambatan
   const calculateOverdueDays = (dueDate) => {
     const today = new Date();
     const due = new Date(dueDate);
@@ -80,13 +77,6 @@ export default function Peminjaman() {
             Manajemen Peminjaman
           </h1>
         </div>
-        
-        <Link 
-          to="/loans/add" 
-          className="flex items-center px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-lg hover:bg-[#3e1f0d]/90 transition-colors"
-        >
-          <FaPlus className="mr-2" /> Peminjaman Baru
-        </Link>
       </div>
 
       {/* Search and Filter Section */}
@@ -102,7 +92,7 @@ export default function Peminjaman() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <div>
             <select
               className="w-full p-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50 text-[#3e1f0d]"
@@ -162,8 +152,8 @@ export default function Peminjaman() {
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                         loan.status === 'Dipinjam' ? 'bg-blue-100 text-blue-800' :
-                        loan.status === 'Dikembalikan' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
+                          loan.status === 'Dikembalikan' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
                       }`}>
                         {loan.status}
                       </span>

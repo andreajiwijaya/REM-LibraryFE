@@ -12,6 +12,8 @@ import Notifikasi from "./Admin/Notifikasi";
 import Peminjaman from "./Admin/Peminjaman";
 import PinjamIni from "./Admin/PinjamIni";
 import ProfileAdmin from "./Admin/Profile";
+import TambahBuku from "./Admin/tambahbuku";
+import TambahAnggota from "./Admin/tambahanggota";
 
 // User
 import DashboardUser from "./User/Dashboard";
@@ -42,7 +44,9 @@ function App() {
           <>
             <Route path="/" element={<AdminHome onLogout={handleLogout} />} />
             <Route path="/manajemen-buku" element={<ManajemenBuku />} />
+            <Route path="/books/add" element={<TambahBuku />} />
             <Route path="/manajemen-anggota" element={<ManajemenAnggota />} />
+            <Route path="/members/add" element={<TambahAnggota />} />
             <Route path="/kembalikan" element={<Kembalikan />} />
             <Route path="/notifikasi" element={<Notifikasi />} />
             <Route path="/peminjaman" element={<Peminjaman />} />

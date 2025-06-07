@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {FaUserEdit,FaKey,FaHistory,FaSignOutAlt,FaArrowLeft,FaUserCircle,FaEnvelope,FaPhone,FaCalendarAlt,FaMapMarkerAlt,} from 'react-icons/fa';
+import {
+  FaUserEdit, FaKey, FaSignOutAlt, FaArrowLeft,
+  FaUserCircle, FaEnvelope, FaPhone, FaCalendarAlt, FaMapMarkerAlt
+} from 'react-icons/fa';
 import './index.css';
 
 export default function Profile() {
-  // Data user
   const [user, setUser] = useState({
     name: 'Admin Perpustakaan',
     email: 'admin@perpustakaan.com',
@@ -14,9 +16,14 @@ export default function Profile() {
     address: 'Jl. Perpustakaan No. 123, Kota Bandung',
   });
 
-  // Edit mode
   const [editMode, setEditMode] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [tempUser, setTempUser] = useState({ ...user });
+  const [passwordData, setPasswordData] = useState({
+    current: '',
+    newPass: '',
+    confirm: '',
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,6 +38,23 @@ export default function Profile() {
   const handleCancel = () => {
     setTempUser({ ...user });
     setEditMode(false);
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({ ...passwordData, [name]: value });
+  };
+
+  const handleSubmitPassword = (e) => {
+    e.preventDefault();
+    // Validasi dan proses ubah password
+    if (passwordData.newPass !== passwordData.confirm) {
+      alert('Password baru dan konfirmasi tidak cocok.');
+      return;
+    }
+    alert('Password berhasil diubah!');
+    setPasswordData({ current: '', newPass: '', confirm: '' });
+    setShowPasswordForm(false);
   };
 
   return (
@@ -77,11 +101,6 @@ export default function Profile() {
             <div className="flex flex-col items-center">
               <div className="relative mb-4">
                 <FaUserCircle className="text-[#3e1f0d] text-8xl" />
-                {editMode && (
-                  <button className="absolute bottom-0 right-0 bg-[#3e1f0d] text-[#fff9e6] p-2 rounded-full hover:bg-[#3e1f0d]/90">
-                    <FaUserEdit />
-                  </button>
-                )}
               </div>
 
               <h3 className="text-xl font-bold text-[#3e1f0d] text-center">
@@ -100,18 +119,13 @@ export default function Profile() {
               <p className="text-gray-500 mt-1">{user.role}</p>
 
               <div className="w-full mt-6 space-y-4">
-                <Link
-                  to="/change-password"
-                  className="flex items-center px-4 py-2 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/20"
+                <button
+                  onClick={() => setShowPasswordForm(!showPasswordForm)}
+                  className="flex items-center w-full px-4 py-2 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/20"
                 >
                   <FaKey className="mr-3" /> Ubah Password
-                </Link>
-                <Link
-                  to="/activity-log"
-                  className="flex items-center px-4 py-2 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/20"
-                >
-                  <FaHistory className="mr-3" /> Log Aktivitas
-                </Link>
+                </button>
+
                 <Link
                   to="/logout"
                   className="flex items-center px-4 py-2 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/20"
@@ -213,6 +227,52 @@ export default function Profile() {
                   )}
                 </div>
               </div>
+
+              {/* Form Ubah Password */}
+              {showPasswordForm && (
+                <form onSubmit={handleSubmitPassword} className="mt-8 space-y-4 border-t pt-6">
+                  <h4 className="text-lg font-semibold text-[#3e1f0d]">Form Ubah Password</h4>
+                  <input
+                    type="password"
+                    name="current"
+                    placeholder="Password Lama"
+                    value={passwordData.current}
+                    onChange={handlePasswordChange}
+                    className="w-full border p-2 rounded-md focus:outline-none"
+                  />
+                  <input
+                    type="password"
+                    name="newPass"
+                    placeholder="Password Baru"
+                    value={passwordData.newPass}
+                    onChange={handlePasswordChange}
+                    className="w-full border p-2 rounded-md focus:outline-none"
+                  />
+                  <input
+                    type="password"
+                    name="confirm"
+                    placeholder="Konfirmasi Password Baru"
+                    value={passwordData.confirm}
+                    onChange={handlePasswordChange}
+                    className="w-full border p-2 rounded-md focus:outline-none"
+                  />
+                  <div className="flex space-x-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-md"
+                    >
+                      Simpan Password
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordForm(false)}
+                      className="px-4 py-2 border border-[#3e1f0d] text-[#3e1f0d] rounded-md"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>
