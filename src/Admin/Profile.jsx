@@ -58,20 +58,20 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex-1 p-8 flex flex-col min-h-screen">
+    <div className="flex-1 p-8 flex flex-col min-h-screen bg-[#fff9e6]">
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#3e1f0d]/10">
-            <FaArrowLeft className="text-[#3e1f0d]" />
+          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
+            <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
-          <h2 className="text-2xl font-bold text-[#3e1f0d]">Profil Saya</h2>
+          <h2 className="text-2xl font-bold text-[#2D1E17]">Profil Saya</h2>
         </div>
 
         {!editMode ? (
           <button
             onClick={() => setEditMode(true)}
-            className="flex items-center px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-lg hover:bg-[#3e1f0d]/90"
+            className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90"
           >
             <FaUserEdit className="mr-2" /> Edit Profil
           </button>
@@ -79,13 +79,13 @@ export default function Profile() {
           <div className="flex space-x-2">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 border border-[#3e1f0d] text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/10"
+              className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/10"
             >
               Batal
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-lg hover:bg-[#3e1f0d]/90"
+              className="px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90"
             >
               Simpan Perubahan
             </button>
@@ -100,17 +100,17 @@ export default function Profile() {
           <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
             <div className="flex flex-col items-center">
               <div className="relative mb-4">
-                <FaUserCircle className="text-[#3e1f0d] text-8xl" />
+                <FaUserCircle className="text-[#2D1E17] text-8xl" />
               </div>
 
-              <h3 className="text-xl font-bold text-[#3e1f0d] text-center">
+              <h3 className="text-xl font-bold text-[#2D1E17] text-center">
                 {editMode ? (
                   <input
                     type="text"
                     name="name"
                     value={tempUser.name}
                     onChange={handleInputChange}
-                    className="w-full text-center border-b border-[#3e1f0d] focus:outline-none"
+                    className="w-full text-center border-b border-[#2D1E17] focus:outline-none"
                   />
                 ) : (
                   user.name
@@ -121,14 +121,14 @@ export default function Profile() {
               <div className="w-full mt-6 space-y-4">
                 <button
                   onClick={() => setShowPasswordForm(!showPasswordForm)}
-                  className="flex items-center w-full px-4 py-2 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/20"
+                  className="flex items-center w-full px-4 py-2 bg-[#2D1E17]/10 text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/20"
                 >
                   <FaKey className="mr-3" /> Ubah Password
                 </button>
 
                 <Link
                   to="/logout"
-                  className="flex items-center px-4 py-2 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/20"
+                  className="flex items-center px-4 py-2 bg-[#2D1E17]/10 text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/20"
                 >
                   <FaSignOutAlt className="mr-3" /> Keluar
                 </Link>
@@ -140,12 +140,12 @@ export default function Profile() {
         {/* Detail Profil */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold text-[#3e1f0d] mb-6">Informasi Profil</h3>
+            <h3 className="text-xl font-bold text-[#2D1E17] mb-6">Informasi Profil</h3>
 
             <div className="space-y-6">
               {/* Email */}
               <div className="flex items-start">
-                <div className="p-3 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-full mr-4">
+                <div className="p-3 bg-[#2D1E17]/10 text-[#2D1E17] rounded-full mr-4">
                   <FaEnvelope />
                 </div>
                 <div className="flex-1">
@@ -156,7 +156,7 @@ export default function Profile() {
                       name="email"
                       value={tempUser.email}
                       onChange={handleInputChange}
-                      className="w-full border-b border-[#3e1f0d] focus:outline-none py-1"
+                      className="w-full border-b border-[#2D1E17] focus:outline-none py-1"
                     />
                   ) : (
                     <p className="text-gray-800">{user.email}</p>
@@ -166,7 +166,7 @@ export default function Profile() {
 
               {/* Nomor Telepon */}
               <div className="flex items-start">
-                <div className="p-3 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-full mr-4">
+                <div className="p-3 bg-[#2D1E17]/10 text-[#2D1E17] rounded-full mr-4">
                   <FaPhone />
                 </div>
                 <div className="flex-1">
@@ -177,7 +177,7 @@ export default function Profile() {
                       name="phone"
                       value={tempUser.phone}
                       onChange={handleInputChange}
-                      className="w-full border-b border-[#3e1f0d] focus:outline-none py-1"
+                      className="w-full border-b border-[#2D1E17] focus:outline-none py-1"
                     />
                   ) : (
                     <p className="text-gray-800">{user.phone}</p>
@@ -187,7 +187,7 @@ export default function Profile() {
 
               {/* Tanggal Bergabung */}
               <div className="flex items-start">
-                <div className="p-3 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-full mr-4">
+                <div className="p-3 bg-[#2D1E17]/10 text-[#2D1E17] rounded-full mr-4">
                   <FaCalendarAlt />
                 </div>
                 <div className="flex-1">
@@ -198,7 +198,7 @@ export default function Profile() {
 
               {/* Role */}
               <div className="flex items-start">
-                <div className="p-3 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-full mr-4">
+                <div className="p-3 bg-[#2D1E17]/10 text-[#2D1E17] rounded-full mr-4">
                   <FaUserCircle />
                 </div>
                 <div className="flex-1">
@@ -209,7 +209,7 @@ export default function Profile() {
 
               {/* Alamat */}
               <div className="flex items-start">
-                <div className="p-3 bg-[#3e1f0d]/10 text-[#3e1f0d] rounded-full mr-4">
+                <div className="p-3 bg-[#2D1E17]/10 text-[#2D1E17] rounded-full mr-4">
                   <FaMapMarkerAlt />
                 </div>
                 <div className="flex-1">
@@ -220,7 +220,7 @@ export default function Profile() {
                       value={tempUser.address}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full border border-[#3e1f0d] rounded-md focus:outline-none p-2"
+                      className="w-full border border-[#2D1E17] rounded-md focus:outline-none p-2"
                     />
                   ) : (
                     <p className="text-gray-800">{user.address}</p>
@@ -231,7 +231,7 @@ export default function Profile() {
               {/* Form Ubah Password */}
               {showPasswordForm && (
                 <form onSubmit={handleSubmitPassword} className="mt-8 space-y-4 border-t pt-6">
-                  <h4 className="text-lg font-semibold text-[#3e1f0d]">Form Ubah Password</h4>
+                  <h4 className="text-lg font-semibold text-[#2D1E17]">Form Ubah Password</h4>
                   <input
                     type="password"
                     name="current"
@@ -259,14 +259,14 @@ export default function Profile() {
                   <div className="flex space-x-2">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-md"
+                      className="px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-md"
                     >
                       Simpan Password
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowPasswordForm(false)}
-                      className="px-4 py-2 border border-[#3e1f0d] text-[#3e1f0d] rounded-md"
+                      className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-md"
                     >
                       Batal
                     </button>

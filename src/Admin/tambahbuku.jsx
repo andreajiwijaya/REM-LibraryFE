@@ -53,10 +53,10 @@ export default function TambahBuku() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/books" className="mr-4 p-2 rounded-full hover:bg-[#3e1f0d]/10">
-            <FaArrowLeft className="text-[#3e1f0d]" />
+          <Link to="/books" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
+            <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
-          <h1 className="text-3xl font-bold text-[#3e1f0d]">
+          <h1 className="text-3xl font-bold text-[#2D1E17]">
             <FaBook className="inline mr-3" />
             Tambah Buku Baru
           </h1>
@@ -70,14 +70,14 @@ export default function TambahBuku() {
             {/* Kolom Kiri */}
             <div>
               <div className="mb-4">
-                <label className="block text-[#3e1f0d] font-medium mb-2">Judul Buku*</label>
+                <label className="block text-[#2D1E17] font-medium mb-2">Judul Buku*</label>
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.title ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.title ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                   placeholder="Masukkan judul buku"
                 />
@@ -85,14 +85,14 @@ export default function TambahBuku() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-[#3e1f0d] font-medium mb-2">Pengarang*</label>
+                <label className="block text-[#2D1E17] font-medium mb-2">Pengarang*</label>
                 <input
                   type="text"
                   name="author"
                   value={formData.author}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.author ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.author ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                   placeholder="Masukkan nama pengarang"
                 />
@@ -100,14 +100,14 @@ export default function TambahBuku() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-[#3e1f0d] font-medium mb-2">ISBN*</label>
+                <label className="block text-[#2D1E17] font-medium mb-2">ISBN*</label>
                 <input
                   type="text"
                   name="isbn"
                   value={formData.isbn}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.isbn ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.isbn ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                   placeholder="Masukkan nomor ISBN"
                 />
@@ -118,14 +118,14 @@ export default function TambahBuku() {
             {/* Kolom Kanan */}
             <div>
               <div className="mb-4">
-                <label className="block text-[#3e1f0d] font-medium mb-2">Tahun Terbit*</label>
+                <label className="block text-[#2D1E17] font-medium mb-2">Tahun Terbit*</label>
                 <input
                   type="text"
                   name="year"
                   value={formData.year}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.year ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.year ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                   placeholder="Masukkan tahun terbit"
                 />
@@ -133,13 +133,13 @@ export default function TambahBuku() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-[#3e1f0d] font-medium mb-2">Kategori*</label>
+                <label className="block text-[#2D1E17] font-medium mb-2">Kategori*</label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.category ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.category ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                 >
                   <option value="">Pilih Kategori</option>
@@ -151,14 +151,14 @@ export default function TambahBuku() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-[#3e1f0d] font-medium mb-2">Jumlah Tersedia*</label>
+                <label className="block text-[#2D1E17] font-medium mb-2">Jumlah Tersedia*</label>
                 <input
                   type="text"
                   name="available"
                   value={formData.available}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.available ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.available ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                   placeholder="Masukkan jumlah buku yang tersedia"
                 />
@@ -169,18 +169,18 @@ export default function TambahBuku() {
 
           {/* URL Cover Buku */}
           <div className="mb-6">
-            <label className="block text-[#3e1f0d] font-medium mb-2">URL Cover Buku</label>
+            <label className="block text-[#2D1E17] font-medium mb-2">URL Cover Buku</label>
             <input
               type="text"
               name="cover"
               value={formData.cover}
               onChange={handleChange}
-              className="w-full p-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50"
+              className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
               placeholder="Masukkan URL gambar cover (opsional)"
             />
             {formData.cover && (
               <div className="mt-2">
-                <p className="text-sm text-[#3e1f0d]/70 mb-1">Preview Cover:</p>
+                <p className="text-sm text-[#2D1E17]/70 mb-1">Preview Cover:</p>
                 <img
                   src={formData.cover}
                   alt="Preview cover"
@@ -197,13 +197,13 @@ export default function TambahBuku() {
           <div className="flex justify-end space-x-3">
             <Link
               to="/books"
-              className="px-4 py-2 border border-[#3e1f0d] text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/10 transition-colors"
+              className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/10 transition-colors"
             >
               Batal
             </Link>
             <button
               type="submit"
-              className="flex items-center px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-lg hover:bg-[#3e1f0d]/90 transition-colors"
+              className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
             >
               <FaSave className="mr-2" /> Simpan Buku
             </button>

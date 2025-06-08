@@ -51,10 +51,10 @@ export default function TambahAnggota() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/members" className="mr-4 p-2 rounded-full hover:bg-[#3e1f0d]/10">
-            <FaArrowLeft className="text-[#3e1f0d]" />
+          <Link to="/members" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
+            <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
-          <h1 className="text-3xl font-bold text-[#3e1f0d] flex items-center">
+          <h1 className="text-3xl font-bold text-[#2D1E17] flex items-center">
             <FaUsers className="inline mr-3" />
             Tambah Anggota Baru
           </h1>
@@ -68,7 +68,7 @@ export default function TambahAnggota() {
             {/* Kolom Kiri */}
             <div>
               <div className="mb-4">
-                <label htmlFor="name" className="block text-[#3e1f0d] font-medium mb-2 flex items-center">
+                <label htmlFor="name" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
                   <FaIdCard className="mr-2" /> Nama Lengkap*
                 </label>
                 <input
@@ -78,7 +78,7 @@ export default function TambahAnggota() {
                   value={formData.name}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.name ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.name ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                   placeholder="Masukkan nama lengkap"
                 />
@@ -86,7 +86,7 @@ export default function TambahAnggota() {
               </div>
 
               <div className="mb-4">
-                <label htmlFor="email" className="block text-[#3e1f0d] font-medium mb-2 flex items-center">
+                <label htmlFor="email" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
                   <FaEnvelope className="mr-2" /> Email*
                 </label>
                 <input
@@ -96,7 +96,7 @@ export default function TambahAnggota() {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.email ? 'border-red-500 focus:ring-red-200' : 'border-[#3e1f0d]/30 focus:ring-[#3e1f0d]/50'
+                    errors.email ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
                   }`}
                   placeholder="Masukkan alamat email"
                 />
@@ -107,7 +107,7 @@ export default function TambahAnggota() {
             {/* Kolom Kanan */}
             <div>
               <div className="mb-4">
-                <label htmlFor="memberId" className="block text-[#3e1f0d] font-medium mb-2 flex items-center">
+                <label htmlFor="memberId" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
                   <FaIdCard className="mr-2" /> ID Anggota
                 </label>
                 <input
@@ -116,12 +116,12 @@ export default function TambahAnggota() {
                   name="memberId"
                   value={formData.memberId}
                   readOnly
-                  className="w-full p-2 border border-[#3e1f0d]/30 rounded-lg bg-gray-100 text-[#3e1f0d]"
+                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg bg-gray-100 text-[#2D1E17]"
                 />
               </div>
 
               <div className="mb-4">
-                <label htmlFor="joinDate" className="block text-[#3e1f0d] font-medium mb-2 flex items-center">
+                <label htmlFor="joinDate" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
                   <FaCalendarAlt className="mr-2" /> Tanggal Bergabung
                 </label>
                 <input
@@ -130,18 +130,18 @@ export default function TambahAnggota() {
                   name="joinDate"
                   value={formData.joinDate}
                   onChange={handleChange}
-                  className="w-full p-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50"
+                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
                 />
               </div>
 
               <div className="mb-4">
-                <label htmlFor="status" className="block text-[#3e1f0d] font-medium mb-2">Status Keanggotaan</label>
+                <label htmlFor="status" className="block text-[#2D1E17] font-medium mb-2">Status Keanggotaan</label>
                 <select
                   id="status"
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full p-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50 text-[#3e1f0d]"
+                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 text-[#2D1E17]"
                 >
                   <option value="Aktif">Aktif</option>
                   <option value="Non-Aktif">Non-Aktif</option>
@@ -154,13 +154,13 @@ export default function TambahAnggota() {
           <div className="flex justify-end space-x-3 mt-6">
             <Link
               to="/members"
-              className="px-4 py-2 border border-[#3e1f0d] text-[#3e1f0d] rounded-lg hover:bg-[#3e1f0d]/10 transition-colors"
+              className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/10 transition-colors"
             >
               Batal
             </Link>
             <button
               type="submit"
-              className="flex items-center px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-lg hover:bg-[#3e1f0d]/90 transition-colors"
+              className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
             >
               <FaSave className="mr-2" /> Simpan Anggota
             </button>

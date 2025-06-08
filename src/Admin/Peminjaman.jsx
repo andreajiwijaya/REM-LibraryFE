@@ -69,10 +69,10 @@ export default function Peminjaman() {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#3e1f0d]/10">
-            <FaArrowLeft className="text-[#3e1f0d]" />
+          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
+            <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
-          <h1 className="text-3xl font-bold text-[#3e1f0d]">
+          <h1 className="text-3xl font-bold text-[#2D1E17]">
             <FaCalendarAlt className="inline mr-3" />
             Manajemen Peminjaman
           </h1>
@@ -83,11 +83,11 @@ export default function Peminjaman() {
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3e1f0d]" />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#2D1E17]" />
             <input
               type="text"
               placeholder="Cari berdasarkan judul buku atau nama anggota..."
-              className="w-full pl-10 pr-4 py-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50"
+              className="w-full pl-10 pr-4 py-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -95,7 +95,7 @@ export default function Peminjaman() {
 
           <div>
             <select
-              className="w-full p-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50 text-[#3e1f0d]"
+              className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 text-[#2D1E17]"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -112,7 +112,7 @@ export default function Peminjaman() {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full">
-            <thead className="bg-[#3e1f0d] text-[#fff9e6]">
+            <thead className="bg-[#2D1E17] text-[#fff9e6]">
               <tr>
                 <th className="px-6 py-3 text-left">Buku</th>
                 <th className="px-6 py-3 text-left">Anggota</th>
@@ -128,7 +128,7 @@ export default function Peminjaman() {
                 filteredLoans.map(loan => (
                   <tr key={loan.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-[#3e1f0d]">{loan.bookTitle}</div>
+                      <div className="font-medium text-[#2D1E17]">{loan.bookTitle}</div>
                       <div className="text-sm text-gray-600">ID: {loan.bookId}</div>
                     </td>
                     <td className="px-6 py-4">
@@ -162,7 +162,7 @@ export default function Peminjaman() {
                       {loan.status !== 'Dikembalikan' && (
                         <button
                           onClick={() => returnBook(loan.id)}
-                          className="flex items-center px-3 py-1 bg-[#3e1f0d] text-[#fff9e6] rounded text-sm hover:bg-[#3e1f0d]/90"
+                          className="flex items-center px-3 py-1 bg-[#2D1E17] text-[#fff9e6] rounded text-sm hover:bg-[#2D1E17]/90"
                         >
                           <FaCheck className="mr-1" /> Kembalikan
                         </button>

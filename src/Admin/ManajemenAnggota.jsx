@@ -32,7 +32,7 @@ export default function ManajemenAnggota() {
       memberId: 'MBR003',
       email: 'citra@example.com',
       joinDate: '2023-03-10',
-      status: 'Non-Aktif',
+      status: 'Tidak Aktif',
       borrowedBooks: 1
     },
     // Tambahkan anggota lain jika perlu
@@ -82,10 +82,10 @@ export default function ManajemenAnggota() {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#3e1f0d]/10" aria-label="Kembali ke halaman utama">
-            <FaArrowLeft className="text-[#3e1f0d]" />
+          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10" aria-label="Kembali ke halaman utama">
+            <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
-          <h1 className="text-3xl font-bold text-[#3e1f0d] flex items-center">
+          <h1 className="text-3xl font-bold text-[#2D1E17] flex items-center">
             <FaUsers className="inline mr-3" />
             Manajemen Anggota
           </h1>
@@ -93,7 +93,7 @@ export default function ManajemenAnggota() {
         
         <Link 
           to="/members/add" 
-          className="flex items-center px-4 py-2 bg-[#3e1f0d] text-[#fff9e6] rounded-lg hover:bg-[#3e1f0d]/90 transition-colors"
+          className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
           aria-label="Tambah anggota baru"
         >
           <FaPlus className="mr-2" /> Tambah Anggota
@@ -104,11 +104,11 @@ export default function ManajemenAnggota() {
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3e1f0d]" />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#2D1E17]" />
             <input
               type="text"
               placeholder="Cari anggota berdasarkan nama atau ID..."
-              className="w-full pl-10 pr-4 py-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50"
+              className="w-full pl-10 pr-4 py-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -120,7 +120,7 @@ export default function ManajemenAnggota() {
           
           <div>
             <select
-              className="w-full p-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50 text-[#3e1f0d]"
+              className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 text-[#2D1E17]"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -130,7 +130,7 @@ export default function ManajemenAnggota() {
             >
               <option value="Semua">Semua Status</option>
               <option value="Aktif">Aktif</option>
-              <option value="Non-Aktif">Non-Aktif</option>
+              <option value="Tidak Aktif">Tidak Aktif</option>
             </select>
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function ManajemenAnggota() {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full">
-            <thead className="bg-[#3e1f0d] text-[#fff9e6]">
+            <thead className="bg-[#2D1E17] text-[#fff9e6]">
               <tr>
                 <th className="px-6 py-3 text-left">Nama</th>
                 <th className="px-6 py-3 text-left">ID Anggota</th>
@@ -155,18 +155,24 @@ export default function ManajemenAnggota() {
               {currentMembers.length > 0 ? (
                 currentMembers.map(member => (
                   <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-[#3e1f0d]">{member.name}</td>
-                    <td className="px-6 py-4 flex items-center">
-                      <FaIdCard className="mr-2 text-[#3e1f0d]/70" />
-                      {member.memberId}
+                    <td className="px-6 py-4 font-medium text-[#2D1E17]">{member.name}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <FaIdCard className="mr-2 text-[#2D1E17]/70" />
+                        <span>{member.memberId}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 flex items-center">
-                      <FaEnvelope className="mr-2 text-[#3e1f0d]/70" />
-                      {member.email}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <FaEnvelope className="mr-2 text-[#2D1E17]/70" />
+                        <span>{member.email}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 flex items-center">
-                      <FaCalendarAlt className="mr-2 text-[#3e1f0d]/70" />
-                      {new Date(member.joinDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <FaCalendarAlt className="mr-2 text-[#2D1E17]/70" />
+                        <span>{new Date(member.joinDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold ${
@@ -182,24 +188,26 @@ export default function ManajemenAnggota() {
                         {member.borrowedBooks} buku
                       </span>
                     </td>
-                    <td className="px-6 py-4 flex space-x-2">
-                      <Link 
-                        to={`/members/edit/${member.id}`}
-                        className="p-2 text-[#3e1f0d] hover:bg-[#3e1f0d]/10 rounded-lg transition-colors"
-                        title="Edit"
-                        aria-label={`Edit anggota ${member.name}`}
-                      >
-                        <FaEdit />
-                      </Link>
-                      <button 
-                        type="button"
-                        onClick={() => deleteMember(member.id)}
-                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Hapus"
-                        aria-label={`Hapus anggota ${member.name}`}
-                      >
-                        <FaTrash />
-                      </button>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <Link 
+                          to={`/members/edit/${member.id}`}
+                          className="p-2 text-[#2D1E17] hover:bg-[#2D1E17]/10 rounded-lg transition-colors"
+                          title="Edit"
+                          aria-label={`Edit anggota ${member.name}`}
+                        >
+                          <FaEdit />
+                        </Link>
+                        <button 
+                          type="button"
+                          onClick={() => deleteMember(member.id)}
+                          className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Hapus"
+                          aria-label={`Hapus anggota ${member.name}`}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -221,7 +229,7 @@ export default function ManajemenAnggota() {
           </div>
           <div className="flex space-x-1">
             <button
-              className="px-3 py-1 rounded border border-[#3e1f0d]/30 text-[#3e1f0d] hover:bg-[#3e1f0d]/10"
+              className="px-3 py-1 rounded border border-[#2D1E17]/30 text-[#2D1E17] hover:bg-[#2D1E17]/10"
               type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
@@ -236,7 +244,7 @@ export default function ManajemenAnggota() {
                 <button
                   key={page}
                   className={`px-3 py-1 rounded ${
-                    currentPage === page ? 'bg-[#3e1f0d] text-[#fff9e6]' : 'border border-[#3e1f0d]/30 text-[#3e1f0d] hover:bg-[#3e1f0d]/10'
+                    currentPage === page ? 'bg-[#2D1E17] text-[#fff9e6]' : 'border border-[#2D1E17]/30 text-[#2D1E17] hover:bg-[#2D1E17]/10'
                   }`}
                   type="button"
                   onClick={() => goToPage(page)}
@@ -248,7 +256,7 @@ export default function ManajemenAnggota() {
             })}
 
             <button
-              className="px-3 py-1 rounded border border-[#3e1f0d]/30 text-[#3e1f0d] hover:bg-[#3e1f0d]/10"
+              className="px-3 py-1 rounded border border-[#2D1E17]/30 text-[#2D1E17] hover:bg-[#2D1E17]/10"
               type="button"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages || totalPages === 0}
@@ -261,7 +269,7 @@ export default function ManajemenAnggota() {
       </div>
 
       {/* Statistik */}
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-md flex justify-around text-[#3e1f0d]">
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-md flex justify-around text-[#2D1E17]">
         <div className="text-center">
           <h2 className="text-xl font-bold">{members.length}</h2>
           <p>Total Anggota</p>
@@ -271,8 +279,8 @@ export default function ManajemenAnggota() {
           <p>Anggota Aktif</p>
         </div>
         <div className="text-center">
-          <h2 className="text-xl font-bold">{members.filter(m => m.status === 'Non-Aktif').length}</h2>
-          <p>Anggota Non-Aktif</p>
+          <h2 className="text-xl font-bold">{members.filter(m => m.status === 'Tidak Aktif').length}</h2>
+          <p>Anggota Tidak Aktif</p>
         </div>
       </div>
     </div>

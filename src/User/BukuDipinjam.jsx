@@ -54,9 +54,9 @@ function BukuDipinjam() {
         <Navbar />
         <main className="max-w-5xl mx-auto p-8 text-center">
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-[#d6caa3]/30 p-12 animate-pulse">
-            <BookOpen size={80} className="mx-auto text-[#3e1f0d]/50 mb-6" />
-            <h2 className="text-5xl font-bold text-[#3e1f0d] mb-2">📚 Buku Dipinjam</h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-[#3e1f0d] to-[#d6caa3] mx-auto mb-4 rounded-full" />
+            <BookOpen size={80} className="mx-auto text-[#2D1E17]/50 mb-6" />
+            <h2 className="text-5xl font-bold text-[#2D1E17] mb-2">📚 Buku Dipinjam</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#2D1E17] to-[#d6caa3] mx-auto mb-4 rounded-full" />
             <p className="text-xl text-gray-600">Anda belum meminjam buku apapun.</p>
             <p className="text-gray-500 mt-2">Silakan telusuri koleksi kami!</p>
           </div>
@@ -75,9 +75,9 @@ function BukuDipinjam() {
       <header className="bg-gradient-to-r from-[#f2e8cf] to-[#fefae0] py-12 shadow-inner relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml,%3Csvg...')]"></div>
         <div className="relative text-center">
-          <BookOpen size={48} className="mx-auto text-[#3e1f0d] mb-4" />
-          <h2 className="text-5xl font-bold text-[#3e1f0d]">📚 Buku Dipinjam</h2>
-          <p className="mt-2 text-[#3e1f0d]/70 text-lg">Kelola koleksi buku yang Anda pinjam</p>
+          <BookOpen size={48} className="mx-auto text-[#2D1E17] mb-4" />
+          <h2 className="text-5xl font-bold text-[#2D1E17]">📚 Buku Dipinjam</h2>
+          <p className="mt-2 text-[#2D1E17]/70 text-lg">Kelola koleksi buku yang Anda pinjam</p>
         </div>
       </header>
 
@@ -128,7 +128,7 @@ function BukuDipinjam() {
 
                 <div className="p-6 flex flex-col space-y-4">
                   <div>
-                    <h4 className="font-bold text-xl text-[#3e1f0d] line-clamp-2">{buku.title}</h4>
+                    <h4 className="font-bold text-xl text-[#2D1E17] line-clamp-2">{buku.title}</h4>
                     <p className="flex items-center text-gray-700">
                       <Pencil size={16} className="mr-2" />
                       {buku.author}
@@ -160,8 +160,8 @@ function BukuDipinjam() {
       <footer className="mt-16 bg-white/40 backdrop-blur-sm border-t border-[#d6caa3]/30">
         <div className="max-w-7xl mx-auto p-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <BookOpen size={24} className="text-[#3e1f0d]" />
-            <span className="text-lg font-semibold text-[#3e1f0d]">Perpustakaan Digital</span>
+            <BookOpen size={24} className="text-[#2D1E17]" />
+            <span className="text-lg font-semibold text-[#2D1E17]">Perpustakaan Digital</span>
           </div>
           <p className="text-sm text-gray-600">
             &copy; {new Date().getFullYear()} Menghubungkan Anda dengan Dunia Pengetahuan
@@ -174,7 +174,7 @@ function BukuDipinjam() {
 
 // Komponen tambahan untuk perapian
 const StatBox = ({ icon, title, value, color = "brown" }) => {
-  const baseColor = color === "green" ? "text-green-600" : color === "red" ? "text-red-600" : "text-[#3e1f0d]";
+  const baseColor = color === "green" ? "text-green-600" : color === "red" ? "text-red-600" : "text-[#2D1E17]";
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 text-center hover:scale-105 transition">
       <div className={`mx-auto mb-3 ${baseColor}`}>{icon}</div>

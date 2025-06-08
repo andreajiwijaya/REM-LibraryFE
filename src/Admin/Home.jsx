@@ -1,13 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  FaBook,
-  FaUsers,
-  FaHome,
-  FaCalendarAlt,
-  FaSignOutAlt,
-  FaUserCircle,
-} from 'react-icons/fa';
+import {FaBook,FaUsers,FaHome,FaCalendarAlt,FaSignOutAlt,FaUserCircle,} from 'react-icons/fa';
 import './index.css';
 
 function Layout({ children, onLogout }) {
@@ -15,7 +8,7 @@ function Layout({ children, onLogout }) {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    onLogout(); // Perbarui status peran di App.jsx
+    onLogout(); 
     navigate('/signin');
   };
 
@@ -26,7 +19,7 @@ function Layout({ children, onLogout }) {
   return (
     <div className="flex min-h-screen bg-[#fff9e6]">
       {/* Sidebar */}
-      <div className="w-64 bg-[#3e1f0d] text-[#fff9e6] p-4 flex flex-col min-h-screen">
+      <div className="w-64 bg-[#2D1E17] text-[#fff9e6] p-4 flex flex-col min-h-screen">
         <div className="py-4 border-b border-[#fff9e6]/20">
           <h1 className="text-5xl text-center font-lancelot">Raema Perpustakaan Digital</h1>
         </div>
@@ -65,7 +58,7 @@ function Layout({ children, onLogout }) {
             onClick={handleLogout}
             className="flex items-center p-1 rounded-lg hover:bg-[#fff9e6]/10 w-full text-left text-[#fff9e6]"
           >
-            <FaSignOutAlt className="mr-1 text-2xl" />
+            <FaSignOutAlt className="mr-3 text-2xl" />
             Keluar
           </button>
         </div>
@@ -75,11 +68,11 @@ function Layout({ children, onLogout }) {
       <div className="flex-1 p-8 flex flex-col min-h-screen">
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-bold font-ancizar text-[#3e1f0d]">{currentDate}</h2>
+          <h2 className="text-xl font-bold font-ancizar text-[#2D1E17]">{currentDate}</h2>
           <div className="flex items-center space-x-4">
             {/* Profile */}
-            <Link to="/profile-admin" className="p-2 rounded-full hover:bg-[#3e1f0d]/10">
-              <FaUserCircle className="text-[#3e1f0d] text-3xl" />
+            <Link to="/profile-admin" className="p-2 rounded-full hover:bg-[#2D1E17]/10">
+              <FaUserCircle className="text-[#2D1E17] text-3xl" />
             </Link>
           </div>
         </header>
@@ -113,14 +106,14 @@ function Home() {
             <Link
               key={stat.title}
               to={stat.link}
-              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow block"
+              className="bg-[#fefefe] p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow block"
             >
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-gray-500">{stat.title}</p>
-                  <h3 className="text-3xl font-bold text-[#3e1f0d] mt-2">{stat.value}</h3>
+                  <h3 className="text-3xl font-bold text-[#2D1E17] mt-2">{stat.value}</h3>
                 </div>
-                <div className="p-3 rounded-full bg-[#3e1f0d]/10 text-[#3e1f0d]">{stat.icon}</div>
+                <div className="p-3 rounded-full bg-[#2D1E17]/10 text-[#2D1E17]">{stat.icon}</div>
               </div>
             </Link>
           ) : (
@@ -131,9 +124,9 @@ function Home() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-gray-500">{stat.title}</p>
-                  <h3 className="text-3xl font-bold text-[#3e1f0d] mt-2">{stat.value}</h3>
+                  <h3 className="text-3xl font-bold text-[#2D1E17] mt-2">{stat.value}</h3>
                 </div>
-                <div className="p-3 rounded-full bg-[#3e1f0d]/10 text-[#3e1f0d]">{stat.icon}</div>
+                <div className="p-3 rounded-full bg-[#2D1E17]/10 text-[#2D1E17]">{stat.icon}</div>
               </div>
             </div>
           )
@@ -141,7 +134,7 @@ function Home() {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md flex-grow overflow-auto">
-        <h3 className="text-xl font-semibold text-[#3e1f0d] mb-4">Aktivitas Terkini</h3>
+        <h3 className="text-xl font-semibold text-[#2D1E17] mb-4">Aktivitas Terkini</h3>
         <div className="space-y-4">
           {recentActivities.map((activity) => (
             <div
@@ -149,14 +142,14 @@ function Home() {
               className="flex justify-between items-center pb-4 border-b border-gray-100 last:border-0"
             >
               <div>
-                <p className="font-medium text-[#3e1f0d]">{activity.user}</p>
+                <p className="font-medium text-[#2D1E17]">{activity.user}</p>
                 <p className="text-gray-600">{activity.action}</p>
               </div>
               <span className="text-sm text-gray-500">{activity.time}</span>
             </div>
           ))}
         </div>
-        <Link to="#" className="inline-block mt-4 text-[#3e1f0d] hover:underline">
+        <Link to="#" className="inline-block mt-4 text-[#2D1E17] hover:underline">
           Lihat Semua
         </Link>
       </div>

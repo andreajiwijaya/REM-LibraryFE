@@ -75,10 +75,10 @@ export default function KembaliIni() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#3e1f0d]/10">
-            <FaArrowLeft className="text-[#3e1f0d]" />
+          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
+            <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
-          <h1 className="text-3xl font-bold text-[#3e1f0d]">
+          <h1 className="text-3xl font-bold text-[#2D1E17]">
             <FaCalendarDay className="inline mr-3" />
             Pengembalian Hari Ini ({today})
           </h1>
@@ -89,23 +89,23 @@ export default function KembaliIni() {
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3e1f0d]" />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#2D1E17]" />
             <input
               type="text"
               placeholder="Cari berdasarkan judul buku atau nama anggota..."
-              className="w-full pl-10 pr-4 py-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50"
+              className="w-full pl-10 pr-4 py-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <div className="bg-[#3e1f0d]/10 p-3 rounded-lg">
+          <div className="bg-[#2D1E17]/10 p-3 rounded-lg">
             <div className="flex justify-between items-center">
-              <span className="font-medium text-[#3e1f0d]">Total Pengembalian:</span>
+              <span className="font-medium text-[#2D1E17]">Total Pengembalian:</span>
               <span className="font-bold">{returns.length} buku</span>
             </div>
             <div className="flex justify-between items-center mt-1">
-              <span className="font-medium text-[#3e1f0d]">Total Denda:</span>
+              <span className="font-medium text-[#2D1E17]">Total Denda:</span>
               <span className={`font-bold ${totalFines > 0 ? 'text-red-600' : 'text-green-600'}`}>
                 Rp {totalFines.toLocaleString()}
               </span>
@@ -124,7 +124,7 @@ export default function KembaliIni() {
           <>
             <div className="overflow-x-auto">
               <table className="min-w-full">
-                <thead className="bg-[#3e1f0d] text-[#fff9e6]">
+                <thead className="bg-[#2D1E17] text-[#fff9e6]">
                   <tr>
                     <th className="px-6 py-3 text-left">Buku</th>
                     <th className="px-6 py-3 text-left">Anggota</th>
@@ -139,7 +139,7 @@ export default function KembaliIni() {
                     filteredReturns.map(ret => (
                       <tr key={ret.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="font-medium text-[#3e1f0d] flex items-center">
+                          <div className="font-medium text-[#2D1E17] flex items-center">
                             <FaBook className="mr-2" /> {ret.bookTitle}
                           </div>
                           <div className="text-sm text-gray-600">ID: {ret.bookId}</div>
@@ -184,10 +184,10 @@ export default function KembaliIni() {
 
             {/* Footer ringkasan */}
             <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
-              <div className="text-sm font-medium text-[#3e1f0d]">
+              <div className="text-sm font-medium text-[#2D1E17]">
                 Menampilkan {filteredReturns.length} dari {returns.length} pengembalian
               </div>
-              <Link to="/loans" className="text-sm text-[#3e1f0d] hover:underline flex items-center">
+              <Link to="/peminjaman" className="text-sm text-[#2D1E17] hover:underline flex items-center">
                 Lihat Semua Peminjaman <FaArrowLeft className="ml-1 transform rotate-180" />
               </Link>
             </div>
@@ -199,14 +199,14 @@ export default function KembaliIni() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
         <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
           <h3 className="font-semibold text-gray-600 mb-2">Tepat Waktu</h3>
-          <p className="text-2xl font-bold text-[#3e1f0d]">
+          <p className="text-2xl font-bold text-[#2D1E17]">
             {returns.filter(r => r.fine === 0).length}
             <span className="text-lg font-normal"> buku</span>
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500">
           <h3 className="font-semibold text-gray-600 mb-2">Terlambat</h3>
-          <p className="text-2xl font-bold text-[#3e1f0d]">
+          <p className="text-2xl font-bold text-[#2D1E17]">
             {returns.filter(r => r.fine > 0).length}
             <span className="text-lg font-normal"> buku</span>
           </p>

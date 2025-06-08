@@ -74,10 +74,10 @@ export default function PeminjamanIni() {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#3e1f0d]/10" aria-label="Kembali ke beranda">
-            <FaArrowLeft className="text-[#3e1f0d]" />
+          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10" aria-label="Kembali ke beranda">
+            <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
-          <h1 className="text-3xl font-bold text-[#3e1f0d]">
+          <h1 className="text-3xl font-bold text-[#2D1E17]">
             <FaCalendarCheck className="inline mr-3" />
             Peminjaman Hari Ini ({today})
           </h1>
@@ -87,11 +87,11 @@ export default function PeminjamanIni() {
       {/* Search Section */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="relative">
-          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3e1f0d]" />
+          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#2D1E17]" />
           <input
             type="text"
             placeholder="Cari berdasarkan judul buku atau nama anggota..."
-            className="w-full pl-10 pr-4 py-2 border border-[#3e1f0d]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3e1f0d]/50"
+            className="w-full pl-10 pr-4 py-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -108,7 +108,7 @@ export default function PeminjamanIni() {
           <>
             <div className="overflow-x-auto">
               <table className="min-w-full">
-                <thead className="bg-[#3e1f0d] text-[#fff9e6]">
+                <thead className="bg-[#2D1E17] text-[#fff9e6]">
                   <tr>
                     <th className="px-6 py-3 text-left">Buku</th>
                     <th className="px-6 py-3 text-left">Anggota</th>
@@ -123,7 +123,7 @@ export default function PeminjamanIni() {
                     filteredLoans.map(loan => (
                       <tr key={loan.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="font-medium text-[#3e1f0d] flex items-center">
+                          <div className="font-medium text-[#2D1E17] flex items-center">
                             <FaBook className="mr-2" /> {loan.bookTitle}
                           </div>
                           <div className="text-sm text-gray-600">ID: {loan.bookId}</div>
@@ -146,7 +146,7 @@ export default function PeminjamanIni() {
                             className={`flex items-center px-3 py-1 rounded text-sm 
                               ${loan.status === 'Dikembalikan' 
                                 ? 'bg-gray-400 cursor-not-allowed text-gray-200' 
-                                : 'bg-[#3e1f0d] text-[#fff9e6] hover:bg-[#3e1f0d]/90'}`}
+                                : 'bg-[#2D1E17] text-[#fff9e6] hover:bg-[#2D1E17]/90'}`}
                           >
                             <FaCheck className="mr-1" /> Kembalikan
                           </button>
@@ -167,12 +167,12 @@ export default function PeminjamanIni() {
             {/* Summary Stats */}
             <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
               <div className="flex justify-between items-center">
-                <div className="text-sm font-medium text-[#3e1f0d]">
+                <div className="text-sm font-medium text-[#2D1E17]">
                   Total Peminjaman Hari Ini: {filteredLoans.length}
                 </div>
                 <Link 
                   to="/peminjaman" 
-                  className="text-sm text-[#3e1f0d] hover:underline"
+                  className="text-sm text-[#2D1E17] hover:underline"
                 >
                   Lihat Semua Peminjaman →
                 </Link>
@@ -186,17 +186,17 @@ export default function PeminjamanIni() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
         <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
           <h3 className="font-semibold text-gray-600 mb-2">Paling Banyak Dipinjam</h3>
-          <p className="text-xl font-bold text-[#3e1f0d]">Clean Code</p>
+          <p className="text-xl font-bold text-[#2D1E17]">Clean Code</p>
           <p className="text-sm text-gray-500">5 kali hari ini</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
           <h3 className="font-semibold text-gray-600 mb-2">Anggota Paling Aktif</h3>
-          <p className="text-xl font-bold text-[#3e1f0d]">Andi Setiawan</p>
+          <p className="text-xl font-bold text-[#2D1E17]">Andi Setiawan</p>
           <p className="text-sm text-gray-500">3 buku dipinjam</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500">
           <h3 className="font-semibold text-gray-600 mb-2">Kategori Populer</h3>
-          <p className="text-xl font-bold text-[#3e1f0d]">Pemrograman</p>
+          <p className="text-xl font-bold text-[#2D1E17]">Pemrograman</p>
           <p className="text-sm text-gray-500">8 peminjaman</p>
         </div>
       </div>

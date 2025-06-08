@@ -7,8 +7,8 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const handleNavigate = (path) => {
-    navigate(path);
     setMenuOpen(false);
+    navigate(path);
   };
 
   useEffect(() => {
@@ -22,9 +22,9 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-[#3e1f0d] text-white w-full py-3 px-6 shadow-md sticky top-0 z-[1000]">
-      <div className="flex justify-between items-center max-w-6xl mx-auto">
-        <h3 className="text-xl font-bold font-serif">📖 One IT Library</h3>
+    <nav className="bg-[#2D1E17] text-white w-full py-3 px-6 shadow-md sticky top-0 z-[1000]">
+      <div className="flex justify-between items-center max-w-9xl mx-auto">
+        <h3 className="text-7xl ">📖 One IT Library</h3>
 
         <div
           className="md:hidden cursor-pointer text-white"
@@ -35,20 +35,20 @@ export default function Navbar() {
 
         <ul className="hidden md:flex gap-8 list-none">
           <li
-            className="cursor-pointer text-base font-serif hover:text-[#fefae0]"
-            onClick={() => handleNavigate("/dashboard")}
+            className="cursor-pointer text-base  hover:text-[#fefae0]"
+            onClick={() => handleNavigate("/")}
           >
             Dashboard
           </li>
           <li
-            className="cursor-pointer text-base font-serif hover:text-[#fefae0]"
-            onClick={() => handleNavigate("/buku")}
+            className="cursor-pointer text-base hover:text-[#fefae0]"
+            onClick={() => handleNavigate("/user/buku")}
           >
             Daftar Buku
           </li>
           <li
-            className="cursor-pointer text-base font-serif hover:text-[#fefae0]"
-            onClick={() => handleNavigate("/profil")}
+            className="cursor-pointer text-base hover:text-[#fefae0]"
+            onClick={() => handleNavigate("/user/profil")}
           >
             Profil
           </li>
@@ -57,22 +57,22 @@ export default function Navbar() {
 
       {menuOpen && (
         <div className="absolute top-full left-0 w-full bg-white border-t border-[#eee] animate-fadeIn z-[999]">
-          <ul className="list-none text-[#3e1f0d] font-serif">
+          <ul className="list-none text-[#2D1E17] font-serif">
             <li
               className="py-4 px-6 border-b border-[#f0eada] text-base cursor-pointer hover:bg-[#fefae0]"
-              onClick={() => handleNavigate("/dashboard")}
+              onClick={() => handleNavigate("/")}
             >
               Dashboard
             </li>
             <li
-              className="py-4 px-6 border-b border-[#f0eada] text-base cursor-pointer hover:bg-[#fefae0]"
-              onClick={() => handleNavigate("/buku")}
+              className="py-4 px-6 border-b border-[#f0eada] text-30xl cursor-pointer hover:bg-[#fefae0]"
+              onClick={() => handleNavigate("/user/buku")}
             >
               Daftar Buku
             </li>
             <li
               className="py-4 px-6 border-b border-[#f0eada] text-base cursor-pointer hover:bg-[#fefae0]"
-              onClick={() => handleNavigate("/profil")}
+              onClick={() => handleNavigate("/user/profil")}
             >
               Profil
             </li>

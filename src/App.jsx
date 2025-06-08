@@ -8,7 +8,6 @@ import AdminHome from "./Admin/Home";
 import Kembalikan from "./Admin/KembaliIni";
 import ManajemenBuku from "./Admin/ManajemenBuku";
 import ManajemenAnggota from "./Admin/ManajemenAnggota";
-import Notifikasi from "./Admin/Notifikasi";
 import Peminjaman from "./Admin/Peminjaman";
 import PinjamIni from "./Admin/PinjamIni";
 import ProfileAdmin from "./Admin/Profile";
@@ -48,7 +47,6 @@ function App() {
             <Route path="/manajemen-anggota" element={<ManajemenAnggota />} />
             <Route path="/members/add" element={<TambahAnggota />} />
             <Route path="/kembalikan" element={<Kembalikan />} />
-            <Route path="/notifikasi" element={<Notifikasi />} />
             <Route path="/peminjaman" element={<Peminjaman />} />
             <Route path="/pinjam" element={<PinjamIni />} />
             <Route path="/profile-admin" element={<ProfileAdmin />} />

@@ -4,7 +4,7 @@ import { Edit, Mail, Phone, MapPin, X, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-export default function Profil() {
+export default function Profil({onLogout}) {
   const navigate = useNavigate();
 
   const [userData, setUserData] = useState({
@@ -61,39 +61,39 @@ export default function Profil() {
               <img
                 src="https://static.promediateknologi.id/crop/0x5:800x598/0x0/webp/photo/p2/222/2024/08/14/3-63818274.jpg"
                 alt="Bima"
-                className="w-full h-full rounded-full border-4 border-[#3e1f0d] object-cover shadow-md"
+                className="w-full h-full rounded-full border-4 border-[#2D1E17] object-cover shadow-md"
               />
               <div
-                className="absolute bottom-0 right-0 bg-[#3e1f0d] text-white p-1.5 rounded-full shadow hover:bg-[#2a0707] cursor-pointer transition-colors"
+                className="absolute bottom-0 right-0 bg-[#2D1E17] text-white p-1.5 rounded-full shadow hover:bg-[#2a0707] cursor-pointer transition-colors"
                 onClick={handleEditClick}
               >
                 <Edit size={16} />
               </div>
             </div>
 
-            <h2 className="text-xl font-bold text-[#3e1f0d] mb-1">
+            <h2 className="text-xl font-bold text-[#2D1E17] mb-1">
               {userData.name}
             </h2>
             <p className="text-sm text-gray-500 mb-4">Anggota Perpustakaan</p>
 
             <div className="w-full text-left text-sm text-gray-700 space-y-3">
               <div className="flex items-center gap-2">
-                <Mail size={16} className="text-[#3e1f0d]" />
+                <Mail size={16} className="text-[#2D1E17]" />
                 <span>{userData.email}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone size={16} className="text-[#3e1f0d]" />
+                <Phone size={16} className="text-[#2D1E17]" />
                 <span>{userData.phone}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin size={16} className="text-[#3e1f0d]" />
+                <MapPin size={16} className="text-[#2D1E17]" />
                 <span>{userData.address}</span>
               </div>
             </div>
 
             <button
               onClick={handleEditClick}
-              className="mt-6 w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#3e1f0d] text-white rounded-full font-bold transition-colors duration-300 hover:bg-[#2a0707]"
+              className="mt-6 w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#2D1E17] text-white rounded-full font-bold transition-colors duration-300 hover:bg-[#2a0707]"
             >
               <Edit size={16} />
               Ubah Data
@@ -101,11 +101,14 @@ export default function Profil() {
 
             {/* Tombol Logout */}
             <button
-              onClick={handleLogout}
-              className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#3e1f0d] text-white rounded-full font-bold transition-colors duration-300 hover:bg-[#2a0707]"
+               onClick={() => {
+                onLogout();
+                navigate("/signin");
+            }}
+              className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#2D1E17] text-white rounded-full font-bold transition-colors duration-300 hover:bg-[#2a0707]"
             >
               <LogOut size={16} />
-              Logout
+              Keluar
             </button>
           </div>
         </motion.div>
@@ -134,7 +137,7 @@ export default function Profil() {
               >
                 <X size={20} />
               </button>
-              <h3 className="text-lg font-bold mb-4 text-[#3e1f0d]">
+              <h3 className="text-lg font-bold mb-4 text-[#2D1E17]">
                 Ubah Data Profil
               </h3>
               <div className="space-y-3">
@@ -188,7 +191,7 @@ export default function Profil() {
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-1.5 bg-[#3e1f0d] text-white rounded hover:bg-[#2a0707] transition-colors"
+                  className="px-4 py-1.5 bg-[#2D1E17] text-white rounded hover:bg-[#2a0707] transition-colors"
                 >
                   Simpan
                 </button>
