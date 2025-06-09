@@ -12,6 +12,7 @@ import Peminjaman from "./Admin/Peminjaman";
 import PinjamIni from "./Admin/PinjamIni";
 import ProfileAdmin from "./Admin/Profile";
 import TambahAnggota from "./Admin/TambahAnggota";
+import TambahBuku from "./Admin/tambahbuku";
 import EditAnggota from "./Admin/EditAnggota";
 import EditBuku from "./Admin/EditBuku";
 
