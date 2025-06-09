@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Navbar from "./Navbar";
 import {Search, BookOpen, AlertCircle, Star, Bookmark,} from "lucide-react";
 // Existing ModalKonfirmasi component (no changes needed)
 const ModalKonfirmasi = ({ show, onClose, onConfirm, pesan }) => {
@@ -324,7 +323,6 @@ function DataBuku() {
       transition={{ duration: 0.5 }}
       className="flex flex-col min-h-screen w-full bg-gradient-to-br from-[#fefae0] via-[#fcf7e8] to-[#faf4e0] text-[#2e2e2e] font-serif"
     >
-      <Navbar />
       <ModalKonfirmasi
         show={modal.show}
         onClose={() => setModal({ show: false, pesan: "", aksi: null })}

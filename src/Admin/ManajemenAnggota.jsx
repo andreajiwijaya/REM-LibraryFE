@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaEdit, FaTrash, FaSearch, FaUsers, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaSearch, FaUsers, FaPlus, FaArrowLeft } from 'react-icons/fa';
 
 const ManajemenAnggota = () => {
   const [members, setMembers] = useState([]);
@@ -83,17 +83,28 @@ const ManajemenAnggota = () => {
   const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fefae0]">
       <div className="max-w-7xl mx-auto p-6">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Link
+            to="/admin/dashboard"
+            className="inline-flex items-center space-x-2 text-[#4a2515] hover:text-[#3e1f0d] font-medium transition-colors duration-200 group"
+          >
+            <FaArrowLeft className="text-sm group-hover:-translate-x-1 transition-transform duration-200" />
+            <span>Kembali ke Dashboard</span>
+          </Link>
+        </div>
+
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="bg-blue-50 p-3 rounded-xl">
-                <FaUsers className="text-blue-600 text-xl" />
+              <div className="bg-[#2D1E17] p-3 rounded-xl">
+                <FaUsers className="text-[#fefae0] text-xl" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Manajemen Anggota</h1>
+                <h1 className="text-2xl font-bold text-[#2D1E17]">Manajemen Anggota</h1>
                 <p className="text-gray-500 text-sm mt-1">
                   Kelola data anggota perpustakaan
                 </p>
@@ -101,7 +112,7 @@ const ManajemenAnggota = () => {
             </div>
             <div className="text-right">
               <div className="text-sm text-gray-500">Total Anggota</div>
-              <div className="text-2xl font-bold text-gray-900">{members.length}</div>
+              <div className="text-2xl font-bold text-[#2D1E17]">{members.length}</div>
             </div>
           </div>
         </div>
@@ -114,14 +125,14 @@ const ManajemenAnggota = () => {
               <input
                 type="text"
                 placeholder="Cari berdasarkan nama, email, atau role..."
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a2515]/20 focus:border-[#4a2515] transition-all duration-200"
                 value={searchTerm}
                 onChange={handleSearch}
               />
             </div>
             <Link
-              to="/members/add"
-              className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 font-medium shadow-sm"
+              to="/admin/add-members"
+              className="flex items-center space-x-2 bg-[#4a2515] text-white px-6 py-3 rounded-xl hover:bg-[#3e1f0d] focus:outline-none focus:ring-2 focus:ring-[#4a2515]/20 transition-all duration-200 font-medium shadow-sm"
             >
               <FaPlus className="text-sm" />
               <span>Tambah Anggota</span>
@@ -133,7 +144,7 @@ const ManajemenAnggota = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#4a2515] border-t-transparent mb-4"></div>
               <p className="text-gray-500">Memuat data anggota...</p>
             </div>
           ) : error ? (
@@ -173,7 +184,7 @@ const ManajemenAnggota = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="h-10 w-10 flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                                <div className="h-10 w-10 rounded-full bg-[#d4c6a6] flex items-center justify-center text-[#2D1E17] font-semibold">
                                   {member.username?.charAt(0).toUpperCase()}
                                 </div>
                               </div>
@@ -188,8 +199,8 @@ const ManajemenAnggota = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
                               member.role === 'admin' 
-                                ? 'bg-purple-100 text-purple-800' 
-                                : 'bg-green-100 text-green-800'
+                                ? 'bg-[#2D1E17]/20 text-[#2D1E17]'
+                                : 'bg-[#d4c6a6] text-[#2D1E17]'
                             }`}>
                               {member.role}
                             </span>
@@ -197,8 +208,8 @@ const ManajemenAnggota = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center space-x-3">
                               <Link
-                                to={`/members/edit/${member.id}`}
-                                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                to={`/admin/edit-members/${member.id}`}
+                                className="p-2 text-[#4a2515] hover:text-[#3e1f0d] hover:bg-[#fefae0] rounded-lg transition-all duration-200"
                                 title="Edit anggota"
                               >
                                 <FaEdit className="text-sm" />
@@ -265,7 +276,7 @@ const ManajemenAnggota = () => {
                               onClick={() => setCurrentPage(pageNum)}
                               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 currentPage === pageNum
-                                  ? 'bg-blue-600 text-white shadow-sm'
+                                  ? 'bg-[#4a2515] text-white shadow-sm'
                                   : 'text-gray-700 hover:bg-gray-100'
                               }`}
                             >

@@ -102,7 +102,7 @@ export default function Peminjaman() {
     <div className="min-h-screen bg-[#fff9e6] p-6">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
+          <Link to="/admin/dashboard" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
             <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
           <h1 className="text-3xl font-bold text-[#2D1E17]">

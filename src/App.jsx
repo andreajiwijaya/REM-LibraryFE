@@ -43,17 +43,17 @@ function App() {
           </>
         ) : role === "admin" ? (
           <>
-            <Route path="/" element={<AdminHome onLogout={handleLogout} />} />
-            <Route path="/manajemen-buku" element={<ManajemenBuku />} />
-            <Route path="/books/add" element={<TambahBuku />} />
-            <Route path="/books/edit/:id" element={<EditBuku />} />
-            <Route path="/manajemen-anggota" element={<ManajemenAnggota />} />
-            <Route path="/members/add" element={<TambahAnggota />} />
-            <Route path="/members/edit/:id" element={<EditAnggota />} />
-            <Route path="/kembalikan" element={<Kembalikan />} />
-            <Route path="/peminjaman" element={<Peminjaman />} />
-            <Route path="/pinjam" element={<PinjamIni />} />
-            <Route path="/profile-admin" element={<ProfileAdmin />} />
+            <Route path="/admin/dashboard" element={<AdminHome onLogout={handleLogout} />} />
+            <Route path="/admin/manajemen-buku" element={<ManajemenBuku />} />
+            <Route path="/admin/add-books" element={<TambahBuku />} />
+            <Route path="/admin/edit-books/:id" element={<EditBuku />} />
+            <Route path="/admin/manajemen-anggota" element={<ManajemenAnggota />} />
+            <Route path="/admin/add-members" element={<TambahAnggota />} />
+            <Route path="/admin/edit-members/:id" element={<EditAnggota />} />
+            <Route path="/admin/pengembalian" element={<Kembalikan />} />
+            <Route path="/admin/peminjaman" element={<Peminjaman />} />
+            <Route path="/admin/pinjam" element={<PinjamIni />} />
+            <Route path="/admin/profile" element={<ProfileAdmin />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (

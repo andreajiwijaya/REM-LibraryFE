@@ -62,7 +62,7 @@ export default function Profile() {
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
+          <Link to="/admin/dashboard" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
             <FaArrowLeft className="text-[#2D1E17]" />
           </Link>
           <h2 className="text-2xl font-bold text-[#2D1E17]">Profil Saya</h2>
