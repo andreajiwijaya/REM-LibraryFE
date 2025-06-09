@@ -1,172 +1,228 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaUsers, FaArrowLeft, FaSave, FaIdCard, FaEnvelope, FaCalendarAlt} from 'react-icons/fa';
-import "./index.css";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function TambahAnggota() {
+const TambahAnggota = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(() => ({
-    name: '',
-    memberId: `MBR${Math.floor(1000 + Math.random() * 9000)}`, // Generate random ID once
+  const [formData, setFormData] = useState({
+    username: '',
     email: '',
-    joinDate: new Date().toISOString().split('T')[0], // Default to today
-    status: 'Aktif',
-    borrowedBooks: 0
-  }));
+    password: '',
+    role: 'user', // default role user
+  });
 
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Nama harus diisi';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email harus diisi';
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Email tidak valid';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      // Simulasi penyimpanan data
-      alert(`Anggota berhasil ditambahkan!\n\n` + JSON.stringify(formData, null, 2));
-      navigate('/members'); // Kembali ke halaman manajemen anggota
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token'); // pastikan token disimpan setelah login
+
+      const res = await fetch('https://rem-library.up.railway.app/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Gagal menambahkan anggota');
+      }
+
+      alert('Anggota berhasil ditambahkan!');
+      navigate('manajemen-anggota'); // ganti sesuai route yang kamu pakai
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#fff9e6] p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center">
-          <Link to="/members" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
-            <FaArrowLeft className="text-[#2D1E17]" />
-          </Link>
-          <h1 className="text-3xl font-bold text-[#2D1E17] flex items-center">
-            <FaUsers className="inline mr-3" />
-            Tambah Anggota Baru
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            Tambah Anggota
           </h1>
+          <p className="text-gray-600">Daftarkan anggota baru perpustakaan</p>
         </div>
-      </div>
 
-      {/* Form Tambah Anggota */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Kolom Kiri */}
-            <div>
-              <div className="mb-4">
-                <label htmlFor="name" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
-                  <FaIdCard className="mr-2" /> Nama Lengkap*
+        {/* Form Card */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2"></div>
+          
+          <div className="p-8">
+            {/* Error Alert */}
+            {error && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-r-xl">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-red-700 font-medium">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Username Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Username <span className="text-red-500">*</span>
                 </label>
-                <input
-                  id="name"
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.name ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                  placeholder="Masukkan nama lengkap"
-                />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="username"
+                    required
+                    value={formData.username}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 font-medium text-gray-900 placeholder-gray-500"
+                    placeholder="Masukkan username"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
-                  <FaEnvelope className="mr-2" /> Email*
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Email <span className="text-red-500">*</span>
                 </label>
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.email ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                  placeholder="Masukkan alamat email"
-                />
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-              </div>
-            </div>
-
-            {/* Kolom Kanan */}
-            <div>
-              <div className="mb-4">
-                <label htmlFor="memberId" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
-                  <FaIdCard className="mr-2" /> ID Anggota
-                </label>
-                <input
-                  id="memberId"
-                  type="text"
-                  name="memberId"
-                  value={formData.memberId}
-                  readOnly
-                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg bg-gray-100 text-[#2D1E17]"
-                />
+                <div className="relative">
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 font-medium text-gray-900 placeholder-gray-500"
+                    placeholder="Masukkan email"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label htmlFor="joinDate" className="block text-[#2D1E17] font-medium mb-2 flex items-center">
-                  <FaCalendarAlt className="mr-2" /> Tanggal Bergabung
+              {/* Password Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  id="joinDate"
-                  type="date"
-                  name="joinDate"
-                  value={formData.joinDate}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
-                />
+                <div className="relative">
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 font-medium text-gray-900 placeholder-gray-500"
+                    placeholder="Masukkan password"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label htmlFor="status" className="block text-[#2D1E17] font-medium mb-2">Status Keanggotaan</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 text-[#2D1E17]"
+              {/* Role Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 font-medium text-gray-900 appearance-none cursor-pointer"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-3 focus:ring-blue-500/20 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  <option value="Aktif">Aktif</option>
-                  <option value="Non-Aktif">Non-Aktif</option>
-                </select>
+                  {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      <span>Menyimpan...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      <span>Tambah Anggota</span>
+                    </div>
+                  )}
+                </button>
               </div>
+            </form>
+
+            {/* Back Link */}
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => navigate('/manajemen-anggota')}
+                className="text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200 flex items-center justify-center space-x-2 mx-auto"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Kembali ke Manajemen Anggota</span>
+              </button>
             </div>
           </div>
-
-          {/* Tombol Aksi */}
-          <div className="flex justify-end space-x-3 mt-6">
-            <Link
-              to="/members"
-              className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/10 transition-colors"
-            >
-              Batal
-            </Link>
-            <button
-              type="submit"
-              className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
-            >
-              <FaSave className="mr-2" /> Simpan Anggota
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default TambahAnggota;

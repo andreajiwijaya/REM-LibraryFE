@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {FaBook,FaUsers,FaHome,FaCalendarAlt,FaSignOutAlt,FaUserCircle,} from 'react-icons/fa';
+import { FaBook, FaUsers, FaHome, FaCalendarAlt, FaSignOutAlt, FaUserCircle } from 'react-icons/fa';
 import './index.css';
 
 function Layout({ children, onLogout }) {
@@ -8,7 +8,7 @@ function Layout({ children, onLogout }) {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    onLogout(); 
+    onLogout();
     navigate('/signin');
   };
 
@@ -85,79 +85,127 @@ function Layout({ children, onLogout }) {
 }
 
 function Home() {
-  const stats = [
-    { title: 'Total Buku', value: 1245, icon: <FaBook className="text-2xl" />, link: '/manajemen-buku' },
-    { title: 'Anggota Aktif', value: 342, icon: <FaUsers className="text-2xl" />, link: '/manajemen-anggota' },
-    { title: 'Peminjaman Hari Ini', value: 28, icon: <FaCalendarAlt className="text-2xl" />, link: '/pinjam' },
-    { title: 'Pengembalian Hari Ini', value: 15, icon: <FaCalendarAlt className="text-2xl" />, link: '/kembalikan' },
-  ];
+  const [stats, setStats] = useState([
+    { title: 'Total Buku', value: 0, icon: <FaBook className="text-2xl" />, link: '/manajemen-buku' },
+    { title: 'Anggota Aktif', value: 0, icon: <FaUsers className="text-2xl" />, link: '/manajemen-anggota' },
+    { title: 'Total Peminjaman', value: 0, icon: <FaCalendarAlt className="text-2xl" />, link: '/peminjaman' },
+    { title: 'Total Pengembalian', value: 0, icon: <FaCalendarAlt className="text-2xl" />, link: '/pengembalian' },
+  ]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
-  const recentActivities = [
-    { id: 1, user: 'Andi Setiawan', action: 'Meminjam buku "Clean Code"', time: '10 menit lalu' },
-    { id: 2, user: 'Budi Santoso', action: 'Mengembalikan buku "React for Beginners"', time: '25 menit lalu' },
-    { id: 3, user: 'Citra Dewi', action: 'Memperpanjang pinjaman "JavaScript ES6"', time: '1 jam lalu' },
-  ];
+  useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  const fetchTotalBooks = fetch('https://rem-library.up.railway.app/books?page=1&limit=1', { headers })
+    .then(res => res.json())
+    .then(data => {
+      if (data?.meta?.total != null) return data.meta.total;
+      if (Array.isArray(data)) return data.length;
+      return 0;
+    });
+
+  const fetchUsers = fetch('https://rem-library.up.railway.app/users', { headers })
+    .then(res => res.json())
+    .then(data => {
+      if (!data || !Array.isArray(data.data)) return 0;
+      const activeUsers = data.data.filter(user => user.role === 'user');
+      return activeUsers.length;
+    });
+
+  const fetchBorrows = fetch('https://rem-library.up.railway.app/borrows?page=1&limit=100', { headers })
+    .then(res => res.json())
+    .then(data => {
+      const borrows = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      const borrowsToday = borrows.filter(b => b.borrowDate?.slice(0, 10) === todayStr).length;
+      const returnsToday = borrows.filter(b => b.returnDate?.slice(0, 10) === todayStr).length;
+
+      const recent = borrows
+        .sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate))
+        .slice(0, 5)
+        .map(borrow => ({
+          id: borrow.id,
+          user: borrow.user?.name || 'Unknown',
+          action: borrow.returnDate && new Date(borrow.returnDate) <= new Date()
+            ? `Mengembalikan buku "${borrow.book?.title || 'Unknown'}"`
+            : `Meminjam buku "${borrow.book?.title || 'Unknown'}"`,
+          time: borrow.borrowDate
+            ? new Date(borrow.borrowDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+            : '',
+        }));
+
+      return { borrowsToday, returnsToday, recent };
+    });
+
+  Promise.all([fetchTotalBooks, fetchUsers, fetchBorrows])
+    .then(([totalBooks, totalUsers, { borrowsToday, returnsToday, recent }]) => {
+      setStats([
+        { title: 'Total Buku', value: totalBooks, icon: <FaBook className="text-2xl" />, link: '/manajemen-buku' },
+        { title: 'Anggota', value: totalUsers, icon: <FaUsers className="text-2xl" />, link: '/manajemen-anggota' },
+        { title: 'Peminjaman Hari Ini', value: borrowsToday, icon: <FaCalendarAlt className="text-2xl" />, link: '/peminjaman' },
+        { title: 'Pengembalian Hari Ini', value: returnsToday, icon: <FaCalendarAlt className="text-2xl" />, link: '/pengembalian' },
+      ]);
+      setRecentActivities(recent);
+    })
+    .catch(err => {
+      console.error('Failed to fetch dashboard data:', err);
+    });
+}, []);
+
 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) =>
-          stat.link ? (
-            <Link
-              key={stat.title}
-              to={stat.link}
-              className="bg-[#fefefe] p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow block"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500">{stat.title}</p>
-                  <h3 className="text-3xl font-bold text-[#2D1E17] mt-2">{stat.value}</h3>
-                </div>
-                <div className="p-3 rounded-full bg-[#2D1E17]/10 text-[#2D1E17]">{stat.icon}</div>
+        {stats.map((stat) => (
+          <Link
+            key={stat.title}
+            to={stat.link}
+            className="bg-[#fefefe] p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow block"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-gray-500">{stat.title}</p>
+                <h3 className="text-3xl font-bold text-[#2D1E17] mt-2">{stat.value}</h3>
               </div>
-            </Link>
-          ) : (
-            <div
-              key={stat.title}
-              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500">{stat.title}</p>
-                  <h3 className="text-3xl font-bold text-[#2D1E17] mt-2">{stat.value}</h3>
-                </div>
-                <div className="p-3 rounded-full bg-[#2D1E17]/10 text-[#2D1E17]">{stat.icon}</div>
-              </div>
+              <div className="p-3 rounded-full bg-[#2D1E17]/10 text-[#2D1E17]">{stat.icon}</div>
             </div>
-          )
-        )}
+          </Link>
+        ))}
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md flex-grow overflow-auto">
         <h3 className="text-xl font-semibold text-[#2D1E17] mb-4">Aktivitas Terkini</h3>
         <div className="space-y-4">
-          {recentActivities.map((activity) => (
-            <div
-              key={activity.id}
-              className="flex justify-between items-center pb-4 border-b border-gray-100 last:border-0"
-            >
-              <div>
-                <p className="font-medium text-[#2D1E17]">{activity.user}</p>
-                <p className="text-gray-600">{activity.action}</p>
+          {recentActivities.length === 0 ? (
+            <p className="text-gray-500">Tidak ada aktivitas terkini.</p>
+          ) : (
+            recentActivities.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex justify-between items-center pb-4 border-b border-gray-100 last:border-0"
+              >
+                <div>
+                  <p className="font-medium text-[#2D1E17]">{activity.user}</p>
+                  <p className="text-gray-600">{activity.action}</p>
+                </div>
+                <span className="text-sm text-gray-400">{activity.time}</span>
               </div>
-              <span className="text-sm text-gray-500">{activity.time}</span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
-        <Link to="#" className="inline-block mt-4 text-[#2D1E17] hover:underline">
-          Lihat Semua
-        </Link>
       </div>
     </>
   );
 }
 
-export default function HomePageWrapper({ onLogout }) {
+export default function DashboardAdmin({ onLogout }) {
   return (
     <Layout onLogout={onLogout}>
       <Home />

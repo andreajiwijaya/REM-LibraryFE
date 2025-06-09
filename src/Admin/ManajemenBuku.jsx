@@ -1,299 +1,296 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaBook, FaPlus, FaEdit, FaTrash, FaSearch, FaArrowLeft, FaTags } from 'react-icons/fa';
-import "./index.css";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function ManajemenBuku() {
-  const [books, setBooks] = useState([
-    { 
-      id: 1, 
-      title: 'Clean Code', 
-      author: 'Robert C. Martin', 
-      isbn: '9780132350884', 
-      year: 2008, 
-      category: 'Pemrograman', 
-      available: 5,
-      cover: 'https://m.media-amazon.com/images/I/41xShlnTZTL._SY445_SX342_.jpg'
-    },
-    { 
-      id: 2, 
-      title: 'React for Beginners', 
-      author: 'John Doe', 
-      isbn: '9781234567890', 
-      year: 2020, 
-      category: 'Web Development', 
-      available: 3,
-      cover: 'https://m.media-amazon.com/images/I/51Kwaw5nInL._SY425_.jpg'
-    },
-    { 
-      id: 3, 
-      title: 'JavaScript ES6', 
-      author: 'Jane Smith', 
-      isbn: '9780987654321', 
-      year: 2019, 
-      category: 'Web Development', 
-      available: 7,
-      cover: 'https://m.media-amazon.com/images/I/51W1yH6e3XL._SY425_.jpg'
-    }
-  ]);
+const ManajemenBuku = () => {
+  const navigate = useNavigate();
+  const [books, setBooks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const [categories, setCategories] = useState(['Semua', 'Pemrograman', 'Web Development', 'Fiksi', 'Non-Fiksi']);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [editingBook, setEditingBook] = useState(null);
-  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [newCategory, setNewCategory] = useState('');
+  useEffect(() => {
+    fetchBooks();
+  }, [page, selectedCategory]);
 
-  // Fungsi untuk menghapus buku
-  const deleteBook = (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus buku ini?')) {
-      setBooks(books.filter(book => book.id !== id));
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchBooks = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      let url = `https://rem-library.up.railway.app/books?page=${page}&limit=10`;
+
+      if (selectedCategory) {
+        url += `&category=${selectedCategory}`;
+      }
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!Array.isArray(data.data)) {
+        throw new Error('Books data is not an array');
+      }
+
+      setBooks(data.data);
+      setTotalPages(data.meta?.totalPages || 1);
+      setError('');
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      setError('Gagal memuat data buku.');
     }
   };
 
-  // Fungsi untuk memulai edit buku
-  const startEditBook = (book) => {
-    setEditingBook({...book});
-  };
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        'https://rem-library.up.railway.app/categories?page=1&limit=100',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  // Fungsi untuk menyimpan edit buku
-  const saveEditBook = () => {
-    if (editingBook) {
-      setBooks(books.map(book => book.id === editingBook.id ? editingBook : book));
-      setEditingBook(null);
+      const data = await res.json();
+
+      if (!Array.isArray(data.data)) {
+        throw new Error('Categories data is not an array');
+      }
+
+      setCategories(data.data);
+      setError('');
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setError('Gagal memuat kategori.');
     }
   };
 
-  // Fungsi untuk menambah kategori baru
-  const addCategory = () => {
-    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
-      setCategories([...categories, newCategory.trim()]);
-      setNewCategory('');
-      setShowAddCategoryModal(false);
-    }
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+    setPage(1);
   };
 
-  // Fungsi untuk memfilter buku
-  const filteredBooks = books.filter(book => {
-    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.isbn.includes(searchTerm);
-    const matchesCategory = selectedCategory === 'Semua' || book.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const handleResetFilter = () => {
+    setSelectedCategory('');
+    setPage(1);
+  };
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm('Apakah kamu yakin ingin menghapus buku ini?');
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`https://rem-library.up.railway.app/books/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Gagal menghapus buku');
+      }
+
+      fetchBooks();
+      alert('Buku berhasil dihapus');
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      alert('Gagal menghapus buku');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#fff9e6] p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center">
-          <Link to="/" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
-            <FaArrowLeft className="text-[#2D1E17]" />
-          </Link>
-          <h1 className="text-3xl font-bold text-[#2D1E17]">
-            <FaBook className="inline mr-3" />
-            Manajemen Buku
-          </h1>
-        </div>
-        
-        <div className="flex space-x-3">
-          <button
-            onClick={() => setShowAddCategoryModal(true)}
-            className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
-          >
-            <FaTags className="mr-2" /> Tambah Kategori
-          </button>
-          <Link 
-            to="/books/add" 
-            className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
-          >
-            <FaPlus className="mr-2" /> Tambah Buku
-          </Link>
-        </div>
-      </div>
-
-      {/* Modal Tambah Kategori */}
-      {showAddCategoryModal && (
-        <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
-          <div className="bg-[#fff9e6] p-6 rounded-lg shadow-lg w-96 border border-[#2D1E17]/30">
-            <h2 className="text-xl font-bold mb-4 text-[#2D1E17]">Tambah Kategori Baru</h2>
-            <input
-              type="text"
-              placeholder="Nama kategori baru"
-              className="w-full p-2 border border-[#2D1E17]/30 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 bg-white"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-            />
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowAddCategoryModal(false)}
-                className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/10 transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                onClick={addCategory}
-                className="px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
-              >
-                Simpan
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="p-8 max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-2xl">📚</span>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Manajemen Buku
+              </h1>
+              <p className="text-gray-600 mt-2">Kelola koleksi buku perpustakaan digital Anda</p>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Modal Edit Buku */}
-      {editingBook && (
-        <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
-          <div className="bg-[#fff9e6] p-6 rounded-lg shadow-lg w-96 border border-[#2D1E17]/30">
-            <h2 className="text-xl font-bold mb-4 text-[#2D1E17]">Edit Buku</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-[#2D1E17]">Judul</label>
-                <input
-                  type="text"
-                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 bg-white"
-                  value={editingBook.title}
-                  onChange={(e) => setEditingBook({...editingBook, title: e.target.value})}
-                />
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm">!</span>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[#2D1E17]">Pengarang</label>
-                <input
-                  type="text"
-                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 bg-white"
-                  value={editingBook.author}
-                  onChange={(e) => setEditingBook({...editingBook, author: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#2D1E17]">Jumlah Tersedia</label>
-                <input
-                  type="number"
-                  className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 bg-white"
-                  value={editingBook.available}
-                  onChange={(e) => setEditingBook({...editingBook, available: parseInt(e.target.value) || 0})}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                onClick={() => setEditingBook(null)}
-                className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/10 transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                onClick={saveEditBook}
-                className="px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
-              >
-                Simpan
-              </button>
+              <p className="text-red-700 font-medium">{error}</p>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Filter dan Pencarian */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#2D1E17]" />
-            <input
-              type="text"
-              placeholder="Cari buku berdasarkan judul, pengarang, atau ISBN..."
-              className="w-full pl-10 pr-4 py-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div>
-            <select
-              className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 text-[#2D1E17]"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+        {/* Control Bar */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-10 border border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+            {/* Add Book Button */}
+            <button
+              onClick={() => navigate('/books/add')}
+              className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
             >
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-sm">+</span>
+                </div>
+                <span>Tambah Buku Baru</span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+            </button>
+
+            {/* Filter Section */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={handleCategoryChange}
+                  className="appearance-none bg-white border-2 border-gray-200 rounded-2xl px-6 py-3 pr-12 text-gray-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                >
+                  <option value="">Semua Kategori</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              <button
+                onClick={handleResetFilter}
+                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-medium transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2"
+              >
+                <span className="text-lg"></span>
+                <span>Reset Filter</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tabel Buku */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-[#2D1E17] text-[#fff9e6]">
-              <tr>
-                <th className="px-6 py-3 text-left">Cover</th>
-                <th className="px-6 py-3 text-left">Judul</th>
-                <th className="px-6 py-3 text-left">Pengarang</th>
-                <th className="px-6 py-3 text-left">ISBN</th>
-                <th className="px-6 py-3 text-left">Tahun</th>
-                <th className="px-6 py-3 text-left">Kategori</th>
-                <th className="px-6 py-3 text-left">Tersedia</th>
-                <th className="px-6 py-3 text-left">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBooks.length > 0 ? (
-                filteredBooks.map(book => (
-                  <tr key={book.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <img 
-                        src={book.cover} 
-                        alt={book.title} 
-                        className="w-12 h-16 object-cover rounded"
-                      />
-                    </td>
-                    <td className="px-6 py-4 font-medium text-[#2D1E17]">{book.title}</td>
-                    <td className="px-6 py-4">{book.author}</td>
-                    <td className="px-6 py-4">{book.isbn}</td>
-                    <td className="px-6 py-4">{book.year}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-[#2D1E17]/10 text-[#2D1E17] rounded-full text-xs">
-                        {book.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        book.available > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {book.available} {book.available > 0 ? 'Tersedia' : 'Habis'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 flex space-x-2">
-                      <button
-                        onClick={() => startEditBook(book)}
-                        className="p-2 text-[#2D1E17] hover:bg-[#2D1E17]/10 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button 
-                        onClick={() => deleteBook(book.id)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                        title="Hapus"
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="text-center py-6 text-gray-500">
-                    Buku tidak ditemukan.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {/* Books Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
+          {books.map((book) => (
+            <div
+              key={book.id}
+              className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 transform hover:-translate-y-2"
+            >
+              {/* Card Header */}
+              <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+              
+              {/* Card Content */}
+              <div className="p-8">
+                <div className="mb-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center">
+                      <span className="text-xl">📖</span>
+                    </div>
+                    <div className="w-3 h-3 bg-green-400 rounded-full shadow-sm"></div>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                    {book.title}
+                  </h3>
+                  
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-indigo-600 text-xs">👤</span>
+                    </div>
+                    <p className="text-sm font-medium text-indigo-700">{book.author}</p>
+                  </div>
+                  
+                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                    {book.description}
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => navigate(`/books/edit/${book.id}`)}
+                    className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span>Edit</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDelete(book.id)}
+                    className="flex-1 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Hapus</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Enhanced Pagination */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+            <button
+              onClick={() => page > 1 && setPage((p) => p - 1)}
+              disabled={page === 1}
+              className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-3"
+            >
+              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Halaman Sebelumnya</span>
+            </button>
+            
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-2xl shadow-lg">
+                <span className="font-bold text-lg">{page}</span>
+              </div>
+              <span className="text-gray-500 font-medium">dari</span>
+              <div className="bg-gray-100 text-gray-700 px-6 py-3 rounded-2xl shadow-sm">
+                <span className="font-bold text-lg">{totalPages}</span>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => page < totalPages && setPage((p) => p + 1)}
+              disabled={page === totalPages}
+              className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-3"
+            >
+              <span>Halaman Selanjutnya</span>
+              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default ManajemenBuku;

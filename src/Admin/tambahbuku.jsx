@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaBook, FaArrowLeft, FaSave } from 'react-icons/fa';
 import "./index.css";
@@ -8,22 +8,54 @@ export default function TambahBuku() {
   const [formData, setFormData] = useState({
     title: '',
     author: '',
-    isbn: '',
-    year: '',
-    category: '',
-    available: '',
-    cover: ''
+    categoryId: '',  // note: pakai id kategori, bukan nama
   });
 
   const [errors, setErrors] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [serverError, setServerError] = useState(null);
 
-  const categories = ['Pemrograman', 'Web Development', 'Fiksi', 'Non-Fiksi', 'Lainnya'];
+  // Ambil token dari localStorage (sesuaikan kalau kamu punya cara lain)
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+  if (!token) {
+    setServerError('Token tidak ditemukan. Silakan login ulang.');
+    return;
+  }
+
+  fetch('https://rem-library.up.railway.app/categories?limit=1000', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Gagal mengambil kategori.');
+      }
+      return res.json();
+    })
+    .then((response) => {
+      if (Array.isArray(response.data)) {
+        setCategories(response.data);
+        setServerError(null);
+      } else {
+        setCategories([]);
+        setServerError('Data kategori tidak valid.');
+      }
+    })
+    .catch((err) => {
+      setServerError(err.message);
+      setCategories([]);
+    });
+}, [token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -31,10 +63,7 @@ export default function TambahBuku() {
     const newErrors = {};
     if (!formData.title) newErrors.title = 'Judul harus diisi';
     if (!formData.author) newErrors.author = 'Pengarang harus diisi';
-    if (!formData.isbn) newErrors.isbn = 'ISBN harus diisi';
-    if (!formData.year || isNaN(formData.year)) newErrors.year = 'Tahun harus angka';
-    if (!formData.category) newErrors.category = 'Kategori harus dipilih';
-    if (!formData.available || isNaN(formData.available)) newErrors.available = 'Jumlah harus angka';
+    if (!formData.categoryId) newErrors.categoryId = 'Kategori harus dipilih';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -42,173 +71,255 @@ export default function TambahBuku() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      alert('Buku berhasil ditambahkan!');
-      navigate('/books');  // Pakai navigate, bukan history.push
+    if (!validateForm()) return;
+
+    if (!token) {
+      alert('Anda harus login terlebih dahulu.');
+      return;
     }
+
+    const payload = {
+      title: formData.title,
+      author: formData.author,
+      categoryId: parseInt(formData.categoryId),
+    };
+
+    fetch('https://rem-library.up.railway.app/books', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Gagal menambahkan buku.');
+        }
+        return res.json();
+      })
+      .then(() => {
+        alert('Buku berhasil ditambahkan!');
+        navigate('/books');
+      })
+      .catch((err) => {
+        alert('Error: ' + err.message);
+      });
   };
 
   return (
-    <div className="min-h-screen bg-[#fff9e6] p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center">
-          <Link to="/books" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
-            <FaArrowLeft className="text-[#2D1E17]" />
-          </Link>
-          <h1 className="text-3xl font-bold text-[#2D1E17]">
-            <FaBook className="inline mr-3" />
-            Tambah Buku Baru
-          </h1>
-        </div>
-      </div>
-
-      {/* Form Tambah Buku */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Kolom Kiri */}
-            <div>
-              <div className="mb-4">
-                <label className="block text-[#2D1E17] font-medium mb-2">Judul Buku*</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.title ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                  placeholder="Masukkan judul buku"
-                />
-                {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-[#2D1E17] font-medium mb-2">Pengarang*</label>
-                <input
-                  type="text"
-                  name="author"
-                  value={formData.author}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.author ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                  placeholder="Masukkan nama pengarang"
-                />
-                {errors.author && <p className="text-red-500 text-sm mt-1">{errors.author}</p>}
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-[#2D1E17] font-medium mb-2">ISBN*</label>
-                <input
-                  type="text"
-                  name="isbn"
-                  value={formData.isbn}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.isbn ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                  placeholder="Masukkan nomor ISBN"
-                />
-                {errors.isbn && <p className="text-red-500 text-sm mt-1">{errors.isbn}</p>}
-              </div>
-            </div>
-
-            {/* Kolom Kanan */}
-            <div>
-              <div className="mb-4">
-                <label className="block text-[#2D1E17] font-medium mb-2">Tahun Terbit*</label>
-                <input
-                  type="text"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.year ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                  placeholder="Masukkan tahun terbit"
-                />
-                {errors.year && <p className="text-red-500 text-sm mt-1">{errors.year}</p>}
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-[#2D1E17] font-medium mb-2">Kategori*</label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.category ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                >
-                  <option value="">Pilih Kategori</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-                {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-[#2D1E17] font-medium mb-2">Jumlah Tersedia*</label>
-                <input
-                  type="text"
-                  name="available"
-                  value={formData.available}
-                  onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.available ? 'border-red-500 focus:ring-red-200' : 'border-[#2D1E17]/30 focus:ring-[#2D1E17]/50'
-                  }`}
-                  placeholder="Masukkan jumlah buku yang tersedia"
-                />
-                {errors.available && <p className="text-red-500 text-sm mt-1">{errors.available}</p>}
-              </div>
-            </div>
-          </div>
-
-          {/* URL Cover Buku */}
-          <div className="mb-6">
-            <label className="block text-[#2D1E17] font-medium mb-2">URL Cover Buku</label>
-            <input
-              type="text"
-              name="cover"
-              value={formData.cover}
-              onChange={handleChange}
-              className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
-              placeholder="Masukkan URL gambar cover (opsional)"
-            />
-            {formData.cover && (
-              <div className="mt-2">
-                <p className="text-sm text-[#2D1E17]/70 mb-1">Preview Cover:</p>
-                <img
-                  src={formData.cover}
-                  alt="Preview cover"
-                  className="h-32 object-contain border rounded"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/150x200?text=Cover+Tidak+Tersedia';
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Tombol Aksi */}
-          <div className="flex justify-end space-x-3">
-            <Link
-              to="/books"
-              className="px-4 py-2 border border-[#2D1E17] text-[#2D1E17] rounded-lg hover:bg-[#2D1E17]/10 transition-colors"
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="flex items-center gap-6 mb-6">
+            <Link 
+              to="/books" 
+              className="group flex items-center justify-center w-12 h-12 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
             >
-              Batal
+              <FaArrowLeft className="text-gray-600 group-hover:text-indigo-600 transition-colors" />
             </Link>
-            <button
-              type="submit"
-              className="flex items-center px-4 py-2 bg-[#2D1E17] text-[#fff9e6] rounded-lg hover:bg-[#2D1E17]/90 transition-colors"
-            >
-              <FaSave className="mr-2" /> Simpan Buku
-            </button>
+            
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <FaBook className="text-2xl text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Tambah Buku Baru
+                </h1>
+                <p className="text-gray-600 mt-2">Tambahkan buku baru ke dalam koleksi perpustakaan</p>
+              </div>
+            </div>
           </div>
-        </form>
+        </div>
+
+        {/* Error Server Alert */}
+        {serverError && (
+          <div className="mb-8 max-w-2xl mx-auto">
+            <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-sm font-bold">!</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-red-800 mb-1">Terjadi Kesalahan</h3>
+                  <p className="text-red-700">{serverError}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Form Container */}
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+            {/* Form Header */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-8">
+              <h2 className="text-2xl font-bold text-white mb-2">Informasi Buku</h2>
+              <p className="text-indigo-100">Lengkapi form di bawah untuk menambahkan buku baru</p>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Title Field */}
+                <div className="group">
+                  <label className="block text-gray-800 font-semibold mb-3 text-lg">
+                    Judul Buku
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      className={`w-full px-6 py-4 border-2 rounded-2xl text-gray-800 text-lg transition-all duration-300 focus:outline-none ${
+                        errors.title 
+                          ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100 bg-red-50' 
+                          : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-gray-300'
+                      }`}
+                      placeholder="Masukkan judul buku yang akan ditambahkan"
+                    />
+                    {formData.title && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {errors.title && (
+                    <div className="flex items-center gap-2 mt-3 text-red-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-medium">{errors.title}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Author Field */}
+                <div className="group">
+                  <label className="block text-gray-800 font-semibold mb-3 text-lg">
+                    Pengarang
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="author"
+                      value={formData.author}
+                      onChange={handleChange}
+                      className={`w-full px-6 py-4 border-2 rounded-2xl text-gray-800 text-lg transition-all duration-300 focus:outline-none ${
+                        errors.author 
+                          ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100 bg-red-50' 
+                          : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-gray-300'
+                      }`}
+                      placeholder="Masukkan nama pengarang buku"
+                    />
+                    {formData.author && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {errors.author && (
+                    <div className="flex items-center gap-2 mt-3 text-red-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-medium">{errors.author}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Category Field */}
+                <div className="group">
+                  <label className="block text-gray-800 font-semibold mb-3 text-lg">
+                    Kategori
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="categoryId"
+                      value={formData.categoryId}
+                      onChange={handleChange}
+                      className={`w-full px-6 py-4 border-2 rounded-2xl text-gray-800 text-lg transition-all duration-300 focus:outline-none appearance-none cursor-pointer ${
+                        errors.categoryId 
+                          ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100 bg-red-50' 
+                          : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-gray-300'
+                      }`}
+                    >
+                      <option value="">Pilih kategori buku</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  {errors.categoryId && (
+                    <div className="flex items-center gap-2 mt-3 text-red-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-medium">{errors.categoryId}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 pt-8">
+                  <Link
+                    to="/books"
+                    className="flex-1 px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 font-semibold text-center flex items-center justify-center gap-3 shadow-sm hover:shadow-md"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Batal</span>
+                  </Link>
+                  <button
+                    type="submit"
+                    className="flex-1 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <FaSave className="text-lg" />
+                    <span>Simpan Buku</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Additional Info Card */}
+          <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-blue-800 mb-1">Tips</h3>
+                <p className="text-blue-700 text-sm">Pastikan semua field yang bertanda (*) sudah diisi dengan benar sebelum menyimpan buku.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,24 +1,26 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import SignIn from "./Pages/SignIn";
+import SignIn from "./pages/SignIn";
 
 // Admin
-import AdminHome from "./Admin/Home";
-import Kembalikan from "./Admin/KembaliIni";
-import ManajemenBuku from "./Admin/ManajemenBuku";
-import ManajemenAnggota from "./Admin/ManajemenAnggota";
-import Peminjaman from "./Admin/Peminjaman";
-import PinjamIni from "./Admin/PinjamIni";
-import ProfileAdmin from "./Admin/Profile";
-import TambahBuku from "./Admin/tambahbuku";
-import TambahAnggota from "./Admin/tambahanggota";
+import AdminHome from "./admin/Home";
+import Kembalikan from "./admin/KembaliIni";
+import ManajemenBuku from "./admin/ManajemenBuku";
+import ManajemenAnggota from "./admin/ManajemenAnggota";
+import Peminjaman from "./admin/Peminjaman";
+import PinjamIni from "./admin/PinjamIni";
+import ProfileAdmin from "./admin/Profile";
+import TambahBuku from "./admin/tambahbuku";
+import TambahAnggota from "./admin/TambahAnggota";
+import EditAnggota from "./admin/EditAnggota";
+import EditBuku from "./admin/EditBuku";
 
 // User
-import DashboardUser from "./User/Dashboard";
-import BukuDipinjam from "./User/BukuDipinjam";
-import DataBuku from "./User/DataBuku";
-import ProfilUser from "./User/Profil";
+import DashboardUser from "./user/Dashboard";
+import BukuDipinjam from "./user/BukuDipinjam";
+import DataBuku from "./user/DataBuku";
+import ProfilUser from "./user/Profil";
 
 function App() {
   const [role, setRole] = useState(null);
@@ -44,8 +46,10 @@ function App() {
             <Route path="/" element={<AdminHome onLogout={handleLogout} />} />
             <Route path="/manajemen-buku" element={<ManajemenBuku />} />
             <Route path="/books/add" element={<TambahBuku />} />
+            <Route path="/books/edit/:id" element={<EditBuku />} />
             <Route path="/manajemen-anggota" element={<ManajemenAnggota />} />
             <Route path="/members/add" element={<TambahAnggota />} />
+            <Route path="/members/edit/:id" element={<EditAnggota />} />
             <Route path="/kembalikan" element={<Kembalikan />} />
             <Route path="/peminjaman" element={<Peminjaman />} />
             <Route path="/pinjam" element={<PinjamIni />} />

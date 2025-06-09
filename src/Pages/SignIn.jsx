@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaGoogle, FaFacebookF, FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import {
+  FaGoogle, FaFacebookF, FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock
+} from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
 
 function SignIn({ onLogin }) {
@@ -12,237 +14,315 @@ function SignIn({ onLogin }) {
   const [signupPassword, setSignupPassword] = useState("");
   const [showPasswordSignIn, setShowPasswordSignIn] = useState(false);
   const [showPasswordSignUp, setShowPasswordSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleSignInSubmit = (e) => {
+  const handleSignInSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (username === "admin" && password === "admin123") {
-      alert("Login Admin berhasil!");
-      onLogin("admin");
-      navigate("/");
-    } else if (username === "user" && password === "user123") {
-      alert("Login User berhasil!");
-      onLogin("user");
-      navigate("/user/dashboard");
-    } else {
-      alert("Username atau password salah!");
+    try {
+      const response = await fetch("https://rem-library.up.railway.app/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login gagal");
+      }
+
+      alert("Login berhasil!");
+      localStorage.setItem("token", data.token);
+      onLogin(data.user.role);
+
+      if (data.user.role === "admin") {
+        navigate("/");
+      } else {
+        navigate("/user/dashboard");
+      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSignUpSubmit = (e) => {
+  const handleSignUpSubmit = async (e) => {
     e.preventDefault();
-    alert("Akun berhasil dibuat (simulasi). Silakan login.");
-    setIsSignUp(false);
+    setLoading(true);
+
+    try {
+      const response = await fetch("https://rem-library.up.railway.app/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: signupUsername,
+          email: signupEmail,
+          password: signupPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registrasi gagal");
+      }
+
+      alert("Registrasi berhasil. Silakan login.");
+      setIsSignUp(false);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formVariants = {
-    hidden: { opacity: 0, x: isSignUp ? 50 : -50, scale: 0.9 },
-    visible: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.6, ease: "easeOut" } },
-    exit: { opacity: 0, x: isSignUp ? -50 : 50, scale: 0.9, transition: { duration: 0.6, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1, 
+      transition: { 
+        duration: 0.5, 
+        ease: "easeOut",
+        staggerChildren: 0.1
+      } 
+    },
+    exit: { 
+      opacity: 0, 
+      y: -30, 
+      scale: 0.95, 
+      transition: { duration: 0.3 } 
+    },
   };
 
-  const panelVariants = {
-    hidden: { opacity: 0, x: isSignUp ? -50 : 50, scale: 0.9 },
-    visible: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.6, ease: "easeOut" } },
-    exit: { opacity: 0, x: isSignUp ? 50 : -50, scale: 0.9, transition: { duration: 0.6, ease: "easeOut" } },
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-[#fefae0] font-serif px-4 bg-cover bg-center overflow-hidden relative"
-      style={{
-        backgroundImage:
-          "url('https://png.pngtree.com/background/20230527/original/pngtree-an-old-bookcase-in-a-library-picture-image_2760144.jpg')",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="absolute inset-0 bg-black opacity-50"></div> {/* Dark overlay */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 py-8 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse animation-delay-4000"></div>
+      </div>
 
-      <div className="flex flex-col md:flex-row w-full max-w-3xl bg-[#fff9e6]/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden z-10">
-        {/* Left Section (Sign In/Sign Up Form) */}
-        <div className="w-full md:w-1/2 p-6 flex items-center justify-center relative min-h-[350px]">
-          <AnimatePresence mode="wait">
-            <motion.form
-              key={isSignUp ? "signup" : "signin"}
-              onSubmit={isSignUp ? handleSignUpSubmit : handleSignInSubmit}
-              className="w-full max-w-xs flex flex-col items-center absolute"
-              variants={formVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md mx-auto relative z-10"
+      >
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 p-8 text-center border-b border-white/10">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="w-20 h-20 bg-gradient-to-br from-purple-400 to-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
             >
-              <h2 className="text-9xl md:text-4xl font-bold text-[#2D1E17] mb-4">
-                {isSignUp ? "Sign Up" : "Sign In"}
-              </h2>
+              <FaUser className="text-3xl text-white" />
+            </motion.div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {isSignUp ? "Create Account" : "Welcome Back"}
+            </h1>
+            <p className="text-white/70 text-sm">
+              {isSignUp 
+                ? "Join our library community today" 
+                : "Sign in to access your library"
+              }
+            </p>
+          </div>
 
-              {/* Username */}
-              <div className="w-full relative mb-3">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={isSignUp ? signupUsername : username}
-                  onChange={(e) =>
-                    isSignUp
-                      ? setSignupUsername(e.target.value)
-                      : setUsername(e.target.value)
-                  }
-                  required
-                  className="w-full px-10 py-2 rounded-lg bg-[#bcbcbc] text-[#333] text-sm outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
-                />
-                <FaUser className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#2D1E17]" />
-              </div>
-
-              {/* Email (Sign Up only) */}
-              {isSignUp && (
-                <div className="w-full relative mb-3">
+          {/* Form Container */}
+          <div className="p-8">
+            <AnimatePresence mode="wait">
+              <motion.form
+                key={isSignUp ? "signup" : "signin"}
+                onSubmit={isSignUp ? handleSignUpSubmit : handleSignInSubmit}
+                variants={formVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="space-y-6"
+              >
+                {/* Username Field */}
+                <motion.div variants={itemVariants} className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FaUser className="h-5 w-5 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                  </div>
                   <input
-                    type="email"
-                    placeholder="Email"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
+                    type="text"
+                    placeholder="Username"
+                    value={isSignUp ? signupUsername : username}
+                    onChange={(e) =>
+                      isSignUp
+                        ? setSignupUsername(e.target.value)
+                        : setUsername(e.target.value)
+                    }
                     required
-                    className="w-full px-10 py-2 rounded-lg bg-[#bcbcbc] text-[#333] text-sm outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
+                    className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-2xl text-white placeholder-white/50 outline-none focus:border-purple-400 focus:bg-white/10 transition-all duration-300 backdrop-blur-sm"
                   />
-                  <FaEnvelope className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#2D1E17]" />
-                </div>
-              )}
+                </motion.div>
 
-              {/* Password */}
-              <div className="w-full relative mb-3">
-                <input
-                  type={
-                    isSignUp
-                      ? showPasswordSignUp
+                {/* Email Field (Sign Up only) */}
+                {isSignUp && (
+                  <motion.div variants={itemVariants} className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FaEnvelope className="h-5 w-5 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                    </div>
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                      className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-2xl text-white placeholder-white/50 outline-none focus:border-purple-400 focus:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+                    />
+                  </motion.div>
+                )}
+
+                {/* Password Field */}
+                <motion.div variants={itemVariants} className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FaLock className="h-5 w-5 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                  </div>
+                  <input
+                    type={
+                      isSignUp
+                        ? showPasswordSignUp
+                          ? "text"
+                          : "password"
+                        : showPasswordSignIn
                         ? "text"
                         : "password"
+                    }
+                    placeholder="Password"
+                    value={isSignUp ? signupPassword : password}
+                    onChange={(e) =>
+                      isSignUp
+                        ? setSignupPassword(e.target.value)
+                        : setPassword(e.target.value)
+                    }
+                    required
+                    className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/20 rounded-2xl text-white placeholder-white/50 outline-none focus:border-purple-400 focus:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white/70 transition-colors"
+                    onClick={() =>
+                      isSignUp
+                        ? setShowPasswordSignUp(!showPasswordSignUp)
+                        : setShowPasswordSignIn(!showPasswordSignIn)
+                    }
+                  >
+                    {isSignUp
+                      ? showPasswordSignUp
+                        ? <FaEyeSlash className="h-5 w-5" />
+                        : <FaEye className="h-5 w-5" />
                       : showPasswordSignIn
-                      ? "text"
-                      : "password"
-                  }
-                  placeholder="Password"
-                  value={isSignUp ? signupPassword : password}
-                  onChange={(e) =>
-                    isSignUp
-                      ? setSignupPassword(e.target.value)
-                      : setPassword(e.target.value)
-                  }
-                  required
-                  className="w-full px-10 py-2 rounded-lg bg-[#bcbcbc] text-[#333] text-sm outline-none pr-10 focus:ring-2 focus:ring-[#2D1E17]/50"
-                />
-                <FaLock className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#2D1E17]" />
-                <div
-                  className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer text-[#2D1E17] hover:text-[#555]"
-                  onClick={() =>
-                    isSignUp
-                      ? setShowPasswordSignUp(!showPasswordSignUp)
-                      : setShowPasswordSignIn(!showPasswordSignIn)
-                  }
+                      ? <FaEyeSlash className="h-5 w-5" />
+                      : <FaEye className="h-5 w-5" />}
+                  </button>
+                </motion.div>
+
+                {/* Forgot Password Link */}
+                {!isSignUp && (
+                  <motion.div variants={itemVariants} className="flex justify-end">
+                    <a 
+                      href="#" 
+                      className="text-sm text-white/60 hover:text-purple-400 transition-colors duration-300"
+                    >
+                      Lupa Password?
+                    </a>
+                  </motion.div>
+                )}
+
+                {/* Submit Button */}
+                <motion.button
+                  variants={itemVariants}
+                  type="submit"
+                  disabled={loading}
+                  whileHover={{ scale: 1.02, boxShadow: "0 10px 40px rgba(139, 92, 246, 0.3)" }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-purple-500/25 transition-all duration-300 ${
+                    loading ? "opacity-70 cursor-not-allowed" : "hover:shadow-xl"
+                  }`}
                 >
-                  {isSignUp
-                    ? showPasswordSignUp
-                      ? <FaEyeSlash />
-                      : <FaEye />
-                    : showPasswordSignIn
-                    ? <FaEyeSlash />
-                    : <FaEye />}
+                  {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Processing...</span>
+                    </div>
+                  ) : (
+                    isSignUp ? "Create Account" : "Sign In"
+                  )}
+                </motion.button>
+              </motion.form>
+            </AnimatePresence>
+
+            {/* Toggle Form */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 text-center"
+            >
+              <p className="text-white/60 text-sm mb-4">
+                {isSignUp ? "Already have an account?" : "Don't have an account?"}
+              </p>
+              <motion.button
+                onClick={() => setIsSignUp(!isSignUp)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-300 relative group"
+              >
+                {isSignUp ? "Sign In" : "Sign Up"}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-purple-400 transition-all duration-300 group-hover:w-full"></span>
+              </motion.button>
+            </motion.div>
+
+            {/* Social Login (Optional decoration) */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="mt-8 pt-8 border-t border-white/10"
+            >
+              <div className="flex items-center justify-center space-x-4">
+                <div className="flex items-center space-x-2 text-white/40 text-xs">
+                  <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                    <FaGoogle className="w-3 h-3" />
+                  </div>
+                  <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                    <FaFacebookF className="w-3 h-3" />
+                  </div>
                 </div>
               </div>
-
-              {/* Social Media Icons */}
-              {!isSignUp && (
-                <div className="flex gap-3 my-3">
-                  <motion.div
-                    whileHover={{ scale: 1.1, boxShadow: "0 0 10px rgba(0,0,0,0.2)" }}
-                    className="bg-[#2D1E17] text-[#fff9e6] w-9 h-9 flex items-center justify-center rounded-full text-sm cursor-pointer"
-                  >
-                    <FaGoogle />
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1, boxShadow: "0 0 10px rgba(0,0,0,0.2)" }}
-                    className="bg-[#2D1E17] text-[#fff9e6] w-9 h-9 flex items-center justify-center rounded-full text-sm cursor-pointer"
-                  >
-                    <FaFacebookF />
-                  </motion.div>
-                </div>
-              )}
-
-              {/* Lupa akun */}
-              {!isSignUp && (
-                <p className="text-xs text-[#2D1E17] mb-3">
-                  Lupa akun?{" "}
-                  <a href="#" className="text-[#646464] hover:underline hover:text-[#2D1E17] transition-colors">
-                    Klik di sini
-                  </a>
-                </p>
-              )}
-
-              {/* Submit Button */}
-              <motion.button
-                type="submit"
-                whileHover={{ scale: 1.05, boxShadow: "0 5px 15px rgba(0,0,0,0.2)" }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-[#2D1E17] text-[#fff9e6] px-8 py-2 rounded-full text-base font-semibold hover:bg-[#1e140e] w-full transition-all duration-300"
-              >
-                {isSignUp ? "Sing Up" : "Sign In"}
-              </motion.button>
-            </motion.form>
-          </AnimatePresence>
+            </motion.div>
+          </div>
         </div>
-
-        {/* Right Section (Toggle Panel) */}
-        <div className="w-full md:w-1/2 bg-[#2D1E17] text-[#fff9e6] flex flex-col items-center justify-center p-8 rounded-tr-xl rounded-br-xl shadow-lg select-none">
-          <AnimatePresence mode="wait">
-            {!isSignUp ? (
-              <motion.div
-                key="welcome-back"
-                variants={panelVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="flex flex-col items-center text-center"
-              >
-                <h2 className="text-3xl font-bold mb-4">Selamat Datang !</h2>
-                <p className="text-sm text-[#fff9e6] mb-8 max-w-xs">
-                  Apakah anda Sudah punya akun ?
-                </p>
-                <motion.button
-                  onClick={() => setIsSignUp(true)}
-                  whileHover={{ scale: 1.05, backgroundColor: "#fff7d1", color: "#2D1E17" }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-[#fefae0] text-[#2D1E17] px-8 py-2 rounded-full font-semibold transition-all duration-300 shadow-md"
-                >
-                  Sign Up
-                </motion.button>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="create-account"
-                variants={panelVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="flex flex-col items-center text-center"
-              >
-                <h2 className="text-3xl font-bold mb-4">Selamat Datang !</h2>
-                <p className="text-sm text-[#fefae0] mb-8 max-w-xs">
-                  Apakah anda Belum punya akun ?
-                </p>
-                <motion.button
-                  onClick={() => setIsSignUp(false)}
-                  whileHover={{ scale: 1.05, backgroundColor: "#fff7d1", color: "#2D1E17" }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-[#fefae0] text-[#2D1E17] px-8 py-2 rounded-full font-semibold transition-all duration-300 shadow-md"
-                >
-                  Sign In
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
