@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, Bell, Search, LogOut, Star, BookCheck, Mail, Facebook, Twitter, Instagram } from "lucide-react";
-import { FaBook, FaUser, FaHome } from "react-icons/fa";
+// Perbaikan: Menambahkan kembali FaBook ke impor dari react-icons/fa
+import { FaUser, FaHome, FaBook } from "react-icons/fa";
+import { Menu, X, Bell, LogOut, BookCheck, Mail, Facebook, Twitter, Instagram, Shield, Loader2, Library } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 function Dashboard({ onLogout }) {
@@ -16,11 +18,135 @@ function Dashboard({ onLogout }) {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [bookTypeFilter, setBookTypeFilter] = useState("all");
 
+  // State untuk ulasan (tetap lokal sampai reviewRoute backend diperbaiki) - Modal akan dihapus
   const [reviews, setReviews] = useState({});
-  const [selectedBookForReview, setSelectedBookForReview] = useState(null);
+  const [selectedBookForReview, setSelectedBookForReview] = useState(null); // This will no longer be used for the modal
+
+  // State untuk data pengguna
+  const [userData, setUserData] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [userError, setUserError] = useState(null);
+
+  // State untuk buku yang dipinjam
+  const [myBorrowsCount, setMyBorrowsCount] = useState(0);
+  const [loadingMyBorrows, setLoadingMyBorrows] = useState(true);
+  const [myBorrowsError, setMyBorrowsError] = useState(null); // <-- Ditambahkan: State untuk error buku dipinjam
+
+
+  const token = localStorage.getItem("token"); // Dapatkan token dari localStorage
+
+  // Fungsi untuk menampilkan kotak pesan kustom (pengganti alert)
+  const showMessageBox = (title, message) => {
+    const messageBox = document.createElement('div');
+    messageBox.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    messageBox.innerHTML = `
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
+        <p class="text-lg font-semibold ${title === "Error" ? "text-red-600" : "text-green-600"} mb-4">${title}</p>
+        <p class="text-gray-700 mb-6">${message}</p>
+        <button id="closeMessageBox" class="px-4 py-2 bg-[#4a2515] text-white rounded-md hover:bg-[#3e1f0d] transition-colors">Tutup</button>
+      </div>
+    `;
+    document.body.appendChild(messageBox);
+
+    document.getElementById('closeMessageBox').onclick = () => {
+      document.body.removeChild(messageBox);
+    };
+  };
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    if (typeof onLogout === 'function') {
+      onLogout();
+    } else {
+      console.warn("onLogout prop is not a function or not provided.");
+    }
+    navigate("/signin");
+  }, [navigate, onLogout]);
+
+  // Effect untuk mengambil data pengguna saat komponen dimuat
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoadingUser(true);
+      setUserError(null);
+      try {
+        const res = await fetch(`https://rem-library.up.railway.app/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.status === 401) {
+          handleLogout();
+          showMessageBox("Sesi Kadaluarsa", "Sesi Anda telah berakhir. Mohon masuk kembali.");
+          return;
+        }
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Gagal mengambil data pengguna");
+        }
+
+        const data = await res.json();
+        setUserData(data);
+      } catch (err) {
+        console.error("Fetch user data error:", err);
+        setUserError(err.message);
+        showMessageBox("Error", `Gagal mengambil data pengguna: ${err.message}`);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    if (token) {
+      fetchUserData();
+    } else {
+      setLoadingUser(false);
+      showMessageBox("Peringatan", "Anda tidak terautentikasi. Mohon masuk.");
+      navigate("/signin");
+    }
+  }, [token, handleLogout, navigate]);
+
+
+  // Fungsi untuk mengambil jumlah buku yang dipinjam oleh user
+  useEffect(() => {
+    const fetchMyBorrowsCount = async () => {
+      setLoadingMyBorrows(true);
+      setMyBorrowsError(null); // <-- Ditambahkan: Reset error state
+      try {
+        const res = await fetch(`https://rem-library.up.railway.app/borrows/my`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.status === 401) {
+          handleLogout();
+          return;
+        }
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Gagal mengambil buku yang dipinjam");
+        }
+
+        const data = await res.json();
+        setMyBorrowsCount(data.length || 0);
+      } catch (err) {
+        console.error("Fetch my borrows error:", err);
+        setMyBorrowsError(err.message); // <-- Ditambahkan: Set error state
+        // showMessageBox("Error", `Gagal mengambil jumlah buku dipinjam: ${err.message}`); // Mungkin terlalu sering muncul
+      } finally {
+        setLoadingMyBorrows(false);
+      }
+    };
+
+    if (token) {
+      fetchMyBorrowsCount();
+    }
+  }, [token, handleLogout]);
+
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const toggleNotif = () => setIsNotifOpen(!isNotifOpen);
@@ -38,106 +164,41 @@ function Dashboard({ onLogout }) {
     { label: "Profil", path: "/user/profil", icon: <FaUser size={20} /> },
   ];
 
-  const popularBooks = [
-    {
-      id: 1,
-      judul: "Buku Sakti Pemrograman Web",
-      penulis: "Didik Setiawan",
-      cover: "https://cdn.gramedia.com/uploads/picture_meta/2023/1/19/d6c2ynfcdbjkzuu4gllr5b.jpg",
-      kategori: "non-fiksi",
-    },
-    {
-      id: 2,
-      judul: "Laskar Pelangi",
-      penulis: "Andrea Hirata",
-      cover: "https://upload.wikimedia.org/wikipedia/id/thumb/8/8e/Laskar_pelangi_sampul.jpg/250px-Laskar_pelangi_sampul.jpg",
-      kategori: "fiksi",
-    },
-    {
-      id: 3,
-      judul: "Buku Jago Bola Voli",
-      penulis: "Ikbal Tawakal",
-      cover: "https://images.unsplash.com/photo-1543357480-c60d400e7ef6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-      kategori: "non-fiksi",
-    },
-    {
-      id: 4,
-      judul: "Pemrograman Web",
-      penulis: "Agusriandi",
-      cover: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-      kategori: "non-fiksi",
-    },
-    {
-      id: 5,
-      judul: "Laporan Tahunan",
-      penulis: "Cahaya Dewi",
-      cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-      kategori: "non-fiksi",
-    },
-  ];
+  // Tampilkan loading state atau error jika diperlukan
+  if (loadingUser || loadingMyBorrows) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fefae0]">
+        <div className="text-center text-[#2D1E17]">
+          <Loader2 size={40} className="animate-spin mx-auto mb-4" /> {/* Animated loader */}
+          <p className="text-lg font-semibold">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const filteredBooks = popularBooks.filter((book) => {
-    const matchesSearch = book.judul.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = bookTypeFilter === "all" || book.kategori === bookTypeFilter;
-    return matchesSearch && matchesType;
-  });
+  // Perbaiki kondisi error
+  if (userError || myBorrowsError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fefae0] text-red-600">
+        <div className="text-center">
+          <p className="text-lg font-semibold">Error: {userError || myBorrowsError}</p> {/* Gunakan myBorrowsError */}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-[#4a2515] text-white rounded-md hover:bg-[#3e1f0d]"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const handleReviewChange = (text) => {
-    if (selectedBookForReview) {
-      setReviews((prev) => ({
-        ...prev,
-        [selectedBookForReview.id]: {
-          ...prev[selectedBookForReview.id],
-          review: text,
-        },
-      }));
-    }
-  };
-
-  const handleRatingChange = (rating) => {
-    if (selectedBookForReview) {
-      setReviews((prev) => ({
-        ...prev,
-        [selectedBookForReview.id]: {
-          ...prev[selectedBookForReview.id],
-          rating,
-        },
-      }));
-    }
-  };
-
-  const handleSubmitReview = () => {
-    if (selectedBookForReview) {
-      console.log(`Review submitted for book ${selectedBookForReview.judul}:`, {
-        review: reviews[selectedBookForReview.id]?.review,
-        rating: reviews[selectedBookForReview.id]?.rating,
-      });
-
-      setReviews((prev) => ({
-        ...prev,
-        [selectedBookForReview.id]: {
-          ...prev[selectedBookForReview.id],
-          submitted: true,
-        },
-      }));
-      setSelectedBookForReview(null);
-    }
-  };
-
-  const openReviewModal = (book) => {
-    setSelectedBookForReview(book);
-    if (!reviews[book.id]) {
-      setReviews((prev) => ({
-        ...prev,
-        [book.id]: { review: '', rating: 0, submitted: false },
-      }));
-    }
-  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-[#fefae0] via-[#fcf7e8] to-[#faf4e0] text-[#2e2e2e]">
-      {/* Font CDN Link */}
-      <link href="https://fonts.cdnfonts.com/css/ancizar-serif" rel="stylesheet" />
+      {/* Font CDN Link - Pertimbangkan untuk menghapus jika error terus */}
+      {/* <link href="https://fonts.cdnfonts.com/css/ancizar-serif" rel="stylesheet" /> */}
+      {/* Atau coba memuat secara lokal jika tidak memungkinkan dari CDN */}
 
       {/* Overlay for mobile sidebar */}
       {isSidebarOpen && (
@@ -182,8 +243,7 @@ function Dashboard({ onLogout }) {
         <div className="mt-auto pt-6 border-t border-[#fefae0]/20">
           <button
             onClick={() => {
-              onLogout();
-              navigate("/signin");
+              handleLogout(); // Gunakan fungsi handleLogout yang sudah ada
             }}
             className="flex items-center gap-3 w-full text-sm px-3 py-3 rounded-xl hover:bg-gradient-to-r hover:from-[#5a1616] hover:to-[#6b1e1e] transition-all duration-300 group hover:scale-105"
           >
@@ -197,7 +257,7 @@ function Dashboard({ onLogout }) {
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* Top Bar with Calendar and Notification */}
         <div className="p-4 flex justify-between items-center">
-          <div 
+          <div
             style={{ fontFamily: "'Ancizar Serif', serif" }}
             className="text-lg md:text-xl font-bold text-[#2D1E17] px-5 py-3 "
           >
@@ -224,8 +284,8 @@ function Dashboard({ onLogout }) {
                   {notifications.map((note, idx) => (
                     <li
                       key={idx}
-                      className="px-4 py-3 text-sm text-gray-700 border-b last:border-b-0 hover:bg-gradient-to-r hover:from-[#ffd60a] hover:from-opacity-10 hover:to-transparent cursor-pointer transition-all duration-200"
-                      onClick={() => alert(`Kamu klik notifikasi: "${note}"`)}
+                      className="px-4 py-3 text-sm text-gray-700 border-b last:border-b-0 hover:bg-gradient-to-r hover:from-[#ffd600] hover:from-opacity-10 hover:to-transparent cursor-pointer transition-all duration-200"
+                      onClick={() => showMessageBox("Notifikasi", `Anda mengklik notifikasi: "${note}"`)} // Ganti alert dengan showMessageBox
                     >
                       {note}
                     </li>
@@ -243,91 +303,39 @@ function Dashboard({ onLogout }) {
           transition={{ duration: 0.5 }}
           className="p-6 md:p-8 flex-1"
         >
-          {/* Book Recommendations */}
-          <section className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <h3 className="text-[#2D1E17] text-2xl font-bold">
-                Rekomendasi Buku Populer
-              </h3>
-              
-              <div className="flex gap-2 flex-col sm:flex-row">
-                <div className="flex border-2 border-[#2D1E17] border-opacity-20 rounded-full overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
-                  <input
-                    type="text"
-                    placeholder="Cari buku..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 px-4 py-2 text-sm outline-none bg-transparent w-full min-w-[150px]"
-                  />
-                  <button className="flex items-center justify-center px-4 bg-gradient-to-r from-[#2D1E17] to-[#4a2515] text-[#fefae0] hover:from-[#4a2515] hover:to-[#2D1E17] transition-all duration-300">
-                    <Search size={18} />
-                  </button>
-                </div>
-                <select
-                  value={bookTypeFilter}
-                  onChange={(e) => setBookTypeFilter(e.target.value)}
-                  className="border-2 border-[#2D1E17] border-opacity-20 rounded-full px-4 py-2 text-sm bg-white shadow-sm hover:shadow-md transition-shadow outline-none"
-                >
-                  <option value="all">📚 Semua</option>
-                  <option value="fiksi">✨ Fiksi</option>
-                  <option value="non-fiksi">🎓 Non-Fiksi</option>
-                </select>
+          {/* User Welcome Section - Menampilkan nama pengguna */}
+          <section className="mb-8 p-6 bg-white rounded-2xl shadow-lg border border-gray-100 flex items-center justify-between">
+            <h3 className="text-[#2D1E17] text-2xl font-bold">
+              Selamat Datang, {userData ? userData.username : "Pengguna"}!
+            </h3>
+            {userData && (
+              <div className="inline-flex items-center gap-2 bg-[#4a2515] px-4 py-2 rounded-full shadow-inner text-[#fefae0]">
+                <Shield size={16} className="text-[#fefae0]" />
+                <span className="text-sm font-medium capitalize">
+                  {userData.role}
+                </span>
               </div>
-            </div>
+            )}
+          </section>
 
-            {/* Books Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {filteredBooks.map((book) => (
-                <motion.div
-                  key={book.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: book.id * 0.1 }}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 flex flex-col items-center group border border-gray-100"
-                >
-                  <div className="relative overflow-hidden rounded-xl mb-3 w-full">
-                    <img
-                      src={book.cover}
-                      alt={book.judul}
-                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "https://via.placeholder.com/150x200?text=Cover+Tidak+Tersedia";
-                      }}
-                    />
-                  </div>
-
-                  <h4 className="text-sm font-bold text-center text-[#2D1E17] line-clamp-2 mb-1 group-hover:text-[#ffd60a] transition-colors">
-                    {book.judul}
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2 text-center">{book.penulis}</p>
-
-                  <div className="flex items-center gap-1 mb-2">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      book.kategori === 'fiksi'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {book.kategori === 'fiksi' ? '✨ Fiksi' : '🎓 Non-Fiksi'}
-                    </span>
-                  </div>
-
-                  {reviews[book.id]?.submitted ? (
-                    <div className="mt-2 text-center text-green-600 text-xs font-semibold">
-                      Review submitted! Thank you.
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => openReviewModal(book)}
-                      className="mt-3 bg-[#4a2515] text-[#fffdf5] px-4 py-2 rounded-full text-xs font-bold hover:bg-[#3e1f0d] transition-all duration-300"
-                    >
-                      Beri Ulasan
-                    </button>
-                  )}
-                </motion.div>
-              ))}
-            </div>
+          {/* User Stats Section */}
+          <section className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-2xl shadow-lg p-6 flex items-center gap-4 border border-gray-100"
+            >
+              <div className="bg-[#e8d2ac] p-4 rounded-full">
+                <Library size={30} className="text-[#2D1E17]" />
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-[#2D1E17]">
+                  {myBorrowsCount}
+                </h4>
+                <p className="text-gray-600">Buku Sedang Dipinjam</p>
+              </div>
+            </motion.div>
           </section>
         </motion.main>
 
@@ -335,126 +343,14 @@ function Dashboard({ onLogout }) {
         <footer className="mt-auto bg-white text-[#2D1E17] p-8 border-t border-gray-200">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div>
-                <h3 className="text-xl font-bold mb-4">Raema Perpustakaan Digital</h3>
-                <p className="text-sm opacity-80">
-                  Menyediakan akses ke berbagai koleksi buku digital untuk mendukung pembelajaran dan penelitian.
-                </p>
               </div>
               
-              <div>
-                <h4 className="text-lg font-semibold mb-4">Tautan Cepat</h4>
-                <ul className="space-y-2">
-                  {sidebarItems.map((item) => (
-                    <li key={item.label}>
-                      <a 
-                        href={item.path} 
-                        className="text-sm opacity-80 hover:opacity-100 hover:text-[#ffd60a] transition-all"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigate(item.path);
-                        }}
-                      >
-                        {item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-semibold mb-4">Jam Operasional</h4>
-                <ul className="space-y-2 text-sm opacity-80">
-                  <li>Senin-Jumat: 08.00 - 17.00</li>
-                  <li>Sabtu: 09.00 - 15.00</li>
-                  <li>Minggu & Hari Libur: Tutup</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-semibold mb-4">Hubungi Kami</h4>
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail size={16} className="text-[#2D1E17]" />
-                  <span className="text-sm opacity-80">info@raemalibrary.com</span>
-                </div>
-                <div className="flex gap-4 mt-4">
-                  <a href="#" className="hover:text-[#ffd60a] transition-all">
-                    <Facebook size={20} className="text-[#2D1E17]" />
-                  </a>
-                  <a href="#" className="hover:text-[#ffd60a] transition-all">
-                    <Twitter size={20} className="text-[#2D1E17]" />
-                  </a>
-                  <a href="#" className="hover:text-[#ffd60a] transition-all">
-                    <Instagram size={20} className="text-[#2D1E17]" />
-                  </a>
-                </div>
-              </div>
-            </div>
-            
             <div className="border-t border-gray-200 mt-8 pt-6 text-center text-sm opacity-80">
-              <p>&copy; {new Date().getFullYear()} Raema Perpustakaan Digital. All rights reserved.</p>
+              <p>&copy; {new Date().getFullYear()} Raema Perpustakaan Digital. Semua hak cipta dilindungi.</p>
             </div>
           </div>
         </footer>
       </div>
-
-      {/* Review Modal/Section */}
-      <AnimatePresence>
-        {selectedBookForReview && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 bg-[#fefae0] bg-opacity-60 flex items-center justify-center z-50 p-4"
-            onClick={() => setSelectedBookForReview(null)}
-          >
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setSelectedBookForReview(null)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-600"
-              >
-                <X size={20} />
-              </button>
-              <h3 className="text-xl font-bold text-[#3e1f0d] mb-4 text-center">
-                Beri Ulasan untuk "{selectedBookForReview.judul}"
-              </h3>
-              <div className="flex justify-center items-center gap-1 mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => handleRatingChange(star)}
-                    className={`text-yellow-400 ${
-                      (reviews[selectedBookForReview.id]?.rating || 0) >= star ? "opacity-100" : "opacity-30"
-                    } transition-opacity`}
-                  >
-                    <Star size={24} fill="currentColor" />
-                  </button>
-                ))}
-              </div>
-              <textarea
-                rows={4}
-                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#ffd60a] focus:border-transparent outline-none mb-4"
-                placeholder="Tulis ulasan Anda tentang buku ini..."
-                value={reviews[selectedBookForReview.id]?.review || ""}
-                onChange={(e) => handleReviewChange(e.target.value)}
-              />
-              <button
-                onClick={handleSubmitReview}
-                className="w-full bg-gradient-to-r from-[#3e1f0d] to-[#4a2515] text-[#fefae0] px-6 py-3 rounded-lg text-sm font-bold hover:from-[#4a2515] hover:to-[#3e1f0d] transition-all duration-300 shadow-md"
-              >
-                Kirim Ulasan
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

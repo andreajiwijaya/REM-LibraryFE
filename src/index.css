@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Custom utility classes with Tailwind */
 .auth-container {
   @apply min-h-screen flex items-center justify-center bg-[#fefae0] font-sans;
 }

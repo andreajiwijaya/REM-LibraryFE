@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { FaBook, FaPlus, FaUndo, FaPencilAlt, FaTrash, FaArrowLeft } from 'react-icons/fa';
 
 const ManajemenBuku = () => {
   const navigate = useNavigate();
@@ -7,36 +8,33 @@ const ManajemenBuku = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchBooks();
-  }, [page, selectedCategory]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchBooks = async () => {
+  const fetchBooks = useCallback(async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      let url = `https://rem-library.up.railway.app/books?page=${page}&limit=10`;
+      let url = `https://rem-library.up.railway.app/books?page=${page}&limit=9`; // Limit 9 for better grid layout (3x3)
 
       if (selectedCategory) {
         url += `&category=${selectedCategory}`;
       }
 
       const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Gagal mengambil data buku');
+      }
 
       const data = await res.json();
 
       if (!Array.isArray(data.data)) {
-        throw new Error('Books data is not an array');
+        throw new Error('Format data buku tidak valid');
       }
 
       setBooks(data.data);
@@ -45,34 +43,36 @@ const ManajemenBuku = () => {
     } catch (error) {
       console.error('Error fetching books:', error);
       setError('Gagal memuat data buku.');
+    } finally {
+        setLoading(false);
     }
-  };
+  }, [page, selectedCategory]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
         'https://rem-library.up.railway.app/categories?page=1&limit=100',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       const data = await res.json();
-
       if (!Array.isArray(data.data)) {
-        throw new Error('Categories data is not an array');
+        throw new Error('Format data kategori tidak valid');
       }
-
       setCategories(data.data);
-      setError('');
     } catch (error) {
       console.error('Error fetching categories:', error);
       setError('Gagal memuat kategori.');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBooks();
+  }, [fetchBooks]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
@@ -92,17 +92,15 @@ const ManajemenBuku = () => {
       const token = localStorage.getItem('token');
       const res = await fetch(`https://rem-library.up.railway.app/books/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
         throw new Error('Gagal menghapus buku');
       }
 
-      fetchBooks();
       alert('Buku berhasil dihapus');
+      fetchBooks(); // Refresh data buku
     } catch (error) {
       console.error('Error deleting book:', error);
       alert('Gagal menghapus buku');
@@ -110,201 +108,143 @@ const ManajemenBuku = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fefae0]">
-      <div className="p-8 max-w-7xl mx-auto">
-        {/* Back to Dashboard Button */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/admin/dashboard')}
-            className="group flex items-center gap-3 px-6 py-3 bg-white text-[#2D1E17] rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-medium border border-gray-200"
-          >
-            <svg 
-              className="w-5 h-5 group-hover:-translate-x-1 transition-transform" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
+    <div className="min-h-screen bg-[#fefae0] p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* --- Tombol Kembali Ditambahkan --- */}
+        <div className="mb-8">
+            <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center gap-2 text-[#4a2515] hover:text-[#3e1f0d] font-medium transition-colors duration-200 group"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Kembali ke Dashboard</span>
-          </button>
+                <FaArrowLeft className="text-sm group-hover:-translate-x-1 transition-transform" />
+                <span>Kembali ke Dashboard</span>
+            </Link>
         </div>
 
         {/* Header Section */}
         <div className="mb-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-[#2D1E17] rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-2xl text-[#fefae0]">📚</span>
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-[#2D1E17]">
-                Manajemen Buku
-              </h1>
-              <p className="text-gray-600 mt-2">Kelola koleksi buku perpustakaan digital Anda</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">!</span>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-[#2D1E17] rounded-2xl flex items-center justify-center shadow-lg">
+                <FaBook className="text-2xl text-[#fefae0]" />
               </div>
-              <p className="text-red-700 font-medium">{error}</p>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-[#2D1E17]">Manajemen Buku</h1>
+                <p className="text-gray-600 mt-1 sm:mt-2">Kelola koleksi buku perpustakaan digital Anda</p>
+              </div>
             </div>
-          </div>
-        )}
-
+        </div>
+        
         {/* Control Bar */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-10 border border-gray-100">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-            {/* Add Book Button */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-10 border border-gray-100">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <button
               onClick={() => navigate('/admin/add-books')}
-              className="group relative px-8 py-4 bg-[#4a2515] text-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+              className="w-full md:w-auto group relative px-6 py-4 bg-[#4a2515] text-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-sm">+</span>
-                </div>
+              <div className="flex items-center justify-center gap-3">
+                <FaPlus />
                 <span>Tambah Buku Baru</span>
               </div>
             </button>
 
-            {/* Filter Section */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
+            <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <div className="relative w-full sm:w-auto">
                 <select
                   value={selectedCategory}
                   onChange={handleCategoryChange}
-                  className="appearance-none bg-white border-2 border-gray-200 rounded-2xl px-6 py-3 pr-12 text-gray-700 font-medium focus:outline-none focus:border-[#4a2515] focus:ring-4 focus:ring-[#fefae0] transition-all cursor-pointer shadow-sm hover:shadow-md"
+                  className="w-full appearance-none bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-3 pr-12 text-gray-700 font-medium focus:outline-none focus:border-[#4a2515] focus:ring-4 focus:ring-[#fefae0] transition-all cursor-pointer shadow-sm hover:shadow-md"
                 >
                   <option value="">Semua Kategori</option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </div>
 
               <button
                 onClick={handleResetFilter}
-                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-medium transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-medium transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
               >
-                <span className="text-lg"></span>
-                <span>Reset Filter</span>
+                <FaUndo />
+                <span>Reset</span>
               </button>
             </div>
           </div>
         </div>
+        
+        {/* Loading and Error State */}
+        {loading ? (
+            <div className="text-center py-20"><p className="text-gray-500">Memuat data buku...</p></div>
+        ) : error ? (
+            <div className="text-center py-20"><p className="text-red-500 font-medium">{error}</p></div>
+        ) : (
+            <>
+                {/* Books Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                  {books.map((book) => (
+                    <div key={book.id} className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col">
+                      <div className="h-2 bg-gradient-to-r from-[#d4c6a6] to-[#4a2515]"></div>
+                      <div className="p-8 flex-grow flex flex-col">
+                        <div className="mb-6 flex-grow">
+                          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#4a2515] transition-colors line-clamp-2 h-14">
+                            {book.title}
+                          </h3>
+                          <div className="flex items-center gap-2 mb-4">
+                            <p className="text-sm font-medium text-[#2D1E17]">{book.author}</p>
+                          </div>
+                          <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                            {book.description || "Tidak ada deskripsi."}
+                          </p>
+                        </div>
 
-        {/* Books Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
-          {books.map((book) => (
-            <div
-              key={book.id}
-              className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 transform hover:-translate-y-2"
-            >
-              {/* Card Header */}
-              <div className="h-2 bg-[#4a2515]"></div>
-              
-              {/* Card Content */}
-              <div className="p-8">
-                <div className="mb-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 bg-[#fefae0] rounded-2xl flex items-center justify-center">
-                      <span className="text-xl">📖</span>
+                        <div className="flex gap-3 pt-4 border-t border-gray-100 mt-auto">
+                          <button onClick={() => navigate(`/admin/edit-books/${book.id}`)} className="flex-1 py-3 bg-[#4a2515] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
+                            <FaPencilAlt /> <span>Edit</span>
+                          </button>
+                          <button onClick={() => handleDelete(book.id)} className="flex-1 py-3 bg-[#a54c30] hover:bg-[#8e4229] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
+                            <FaTrash /> <span>Hapus</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="w-3 h-3 bg-green-400 rounded-full shadow-sm"></div>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#4a2515] transition-colors line-clamp-2">
-                    {book.title}
-                  </h3>
-                  
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-6 h-6 bg-[#fefae0] rounded-full flex items-center justify-center">
-                      <span className="text-[#4a2515] text-xs">👤</span>
+                  ))}
+                </div>
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <button
+                          onClick={() => page > 1 && setPage((p) => p - 1)}
+                          disabled={page === 1}
+                          className="w-full sm:w-auto group px-6 py-3 rounded-2xl bg-gray-100 text-gray-700 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3"
+                        >
+                           <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                           <span>Sebelumnya</span>
+                        </button>
+                        
+                        <div className="flex items-center gap-2">
+                           <span className="text-gray-600 font-medium">Halaman</span>
+                           <span className="bg-[#4a2515] text-white px-4 py-2 rounded-xl shadow-lg font-bold">{page}</span>
+                           <span className="text-gray-600 font-medium">dari {totalPages}</span>
+                        </div>
+                        
+                        <button
+                          onClick={() => page < totalPages && setPage((p) => p + 1)}
+                          disabled={page === totalPages}
+                          className="w-full sm:w-auto group px-6 py-3 rounded-2xl bg-gray-100 text-gray-700 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3"
+                        >
+                           <span>Selanjutnya</span>
+                           <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-[#2D1E17]">{book.author}</p>
-                  </div>
-                  
-                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                    {book.description}
-                  </p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => navigate(`/admin/edit-books/${book.id}`)}
-                    className="flex-1 py-3 bg-[#6a9955] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    <span>Edit</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleDelete(book.id)}
-                    className="flex-1 py-3 bg-[#a54c30] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span>Hapus</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Enhanced Pagination */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-            <button
-              onClick={() => page > 1 && setPage((p) => p - 1)}
-              disabled={page === 1}
-              className="group px-8 py-4 rounded-2xl bg-gray-100 text-gray-700 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-3"
-            >
-              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span>Halaman Sebelumnya</span>
-            </button>
-            
-            <div className="flex items-center gap-4">
-              <div className="bg-[#4a2515] text-white px-6 py-3 rounded-2xl shadow-lg">
-                <span className="font-bold text-lg">{page}</span>
-              </div>
-              <span className="text-gray-500 font-medium">dari</span>
-              <div className="bg-gray-100 text-gray-700 px-6 py-3 rounded-2xl shadow-sm">
-                <span className="font-bold text-lg">{totalPages}</span>
-              </div>
-            </div>
-            
-            <button
-              onClick={() => page < totalPages && setPage((p) => p + 1)}
-              disabled={page === totalPages}
-              className="group px-8 py-4 rounded-2xl bg-gray-100 text-gray-700 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-3"
-            >
-              <span>Halaman Selanjutnya</span>
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
+                )}
+            </>
+        )}
       </div>
     </div>
   );

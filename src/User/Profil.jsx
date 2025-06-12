@@ -13,24 +13,67 @@ export default function Profil({ onLogout }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(userData);
 
-  const token = localStorage.getItem("token"); // Ambil token dari localStorage
+  // Get token from localStorage
+  const token = localStorage.getItem("token");
+
+  // Function to display a custom message box
+  const showMessageBox = (title, message) => {
+    const messageBox = document.createElement('div');
+    messageBox.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    messageBox.innerHTML = `
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
+        <p class="text-lg font-semibold ${title === "Error" ? "text-red-600" : "text-green-600"} mb-4">${title}</p>
+        <p class="text-gray-700 mb-6">${message}</p>
+        <button id="closeMessageBox" class="px-4 py-2 bg-[#4a2515] text-white rounded-md hover:bg-[#3e1f0d] transition-colors">Tutup</button>
+      </div>
+    `;
+    document.body.appendChild(messageBox);
+
+    document.getElementById('closeMessageBox').onclick = () => {
+      document.body.removeChild(messageBox);
+    };
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    // Only call onLogout if it's actually a function
+    if (typeof onLogout === 'function') {
+      onLogout();
+    } else {
+      console.warn("onLogout prop is not a function or not provided.");
+    }
+    navigate("/signin");
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        // Fetch user data using the /users/me endpoint
         const res = await fetch(`https://rem-library.up.railway.app/users/me`, {
           headers: {
-            Authorization: `Bearer ${token}`, // Kirim token di header
+            Authorization: `Bearer ${token}`, // Send token in the header
           },
         });
 
-        if (!res.ok) throw new Error("Gagal mengambil data user");
+        // If the token is invalid or expired (status 401), force logout
+        if (res.status === 401) {
+          handleLogout(); // Call handleLogout to clear token and redirect
+          showMessageBox("Sesi Kadaluarsa", "Sesi Anda telah berakhir. Mohon masuk kembali.");
+          return; // Stop further processing
+        }
+
+        if (!res.ok) {
+          const errorData = await res.json(); // Attempt to parse error data
+          throw new Error(errorData.message || "Gagal mengambil data user");
+        }
 
         const data = await res.json();
         setUserData(data);
         setFormData(data); // Also set formData initially
       } catch (err) {
         console.error("Fetch error:", err);
+        showMessageBox("Error", `Gagal mengambil data profil: ${err.message}`);
       }
     };
 
@@ -51,34 +94,40 @@ export default function Profil({ onLogout }) {
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`https://rem-library.up.railway.app/users/${userData.id}`, {
+      // Update user data using the /users/me endpoint
+      const res = await fetch(`https://rem-library.up.railway.app/users/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Kirim token saat update juga
+          Authorization: `Bearer ${token}`, // Send token also for update
         },
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error("Gagal menyimpan data");
+      // Handle token expiration or invalidity during save
+      if (res.status === 401) {
+        handleLogout(); // Clear token and redirect to sign-in
+        showMessageBox("Sesi Kadaluarsa", "Sesi Anda telah berakhir. Mohon masuk kembali.");
+        return; // Stop further processing
+      }
+
+      if (!res.ok) {
+        const errorData = await res.json(); // Attempt to parse error data
+        // Use the error message from the server if available, otherwise a generic one
+        throw new Error(errorData.message || "Gagal menyimpan data");
+      }
 
       const updated = await res.json();
       setUserData(updated);
       setIsEditing(false);
+      showMessageBox("Sukses", "Profil berhasil diperbarui!");
     } catch (err) {
       console.error("Update error:", err);
-      alert("Failed to update profile: " + err.message); // Provide user feedback
+      showMessageBox("Error", `Gagal memperbarui profil: ${err.message}`);
     }
   };
 
   const handleCancel = () => setIsEditing(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    onLogout();
-    navigate("/signin");
-  };
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -141,7 +190,7 @@ export default function Profil({ onLogout }) {
                 </motion.div>
 
                 <h2 className="text-2xl font-bold text-[#fefae0] mb-2">
-                  {userData.username || "Loading..."}
+                  {userData.username || "Memuat..."}
                 </h2>
 
                 <div className="inline-flex items-center gap-2 bg-[#4a2515] px-4 py-2 rounded-full shadow-inner text-[#fefae0]">
@@ -158,7 +207,7 @@ export default function Profil({ onLogout }) {
               <motion.div variants={itemVariants} className="space-y-4">
                 <h3 className="text-lg font-semibold text-[#2D1E17] mb-4 flex items-center gap-2">
                   <User size={20} className="text-[#4a2515]" />
-                  Profile Information
+                  Informasi Profil
                 </h3>
 
                 <div className="space-y-4">
@@ -167,7 +216,7 @@ export default function Profil({ onLogout }) {
                       <User size={18} className="text-[#4a2515]" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-[#2D1E17]/70 font-medium">Username</p>
+                      <p className="text-sm text-[#2D1E17]/70 font-medium">Nama Pengguna</p>
                       <p className="text-[#2D1E17] font-semibold">{userData.username}</p>
                     </div>
                   </div>
@@ -187,7 +236,7 @@ export default function Profil({ onLogout }) {
                       <BadgeInfo size={18} className="text-[#4a2515]" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-[#2D1E17]/70 font-medium">Role</p>
+                      <p className="text-sm text-[#2D1E17]/70 font-medium">Peran</p>
                       <p className="text-[#2D1E17] font-semibold capitalize">{userData.role}</p>
                     </div>
                   </div>
@@ -203,7 +252,7 @@ export default function Profil({ onLogout }) {
                   className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#4a2515] text-[#fefae0] rounded-2xl font-semibold shadow-md transition-all duration-300"
                 >
                   <Settings size={20} />
-                  Edit Profile
+                  Edit Profil
                 </motion.button>
 
                 <motion.button
@@ -213,7 +262,7 @@ export default function Profil({ onLogout }) {
                   className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#6b1e1e] text-[#fefae0] rounded-2xl font-semibold shadow-md transition-all duration-300"
                 >
                   <LogOut size={20} />
-                  Logout
+                  Keluar
                 </motion.button>
               </motion.div>
             </div>
@@ -248,8 +297,8 @@ export default function Profil({ onLogout }) {
                 >
                   <X size={18} />
                 </motion.button>
-                <h3 className="text-xl font-bold text-[#fefae0]">Edit Profile</h3>
-                <p className="text-[#fefae0]/80 text-sm mt-1">Update your profile information</p>
+                <h3 className="text-xl font-bold text-[#fefae0]">Edit Profil</h3>
+                <p className="text-[#fefae0]/80 text-sm mt-1">Perbarui informasi profil Anda</p>
               </div>
 
               {/* Modal Content */}
@@ -257,7 +306,7 @@ export default function Profil({ onLogout }) {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-[#2D1E17] mb-2">
-                      Username
+                      Nama Pengguna
                     </label>
                     <div className="relative">
                       <User size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#2D1E17]/60" />
@@ -267,7 +316,7 @@ export default function Profil({ onLogout }) {
                         value={formData.username}
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 bg-white border border-[#d4c6a6] rounded-xl focus:ring-1 focus:ring-[#4a2515] focus:border-[#4a2515] outline-none transition-all text-[#2D1E17] shadow-sm"
-                        placeholder="Enter username"
+                        placeholder="Masukkan nama pengguna"
                       />
                     </div>
                   </div>
@@ -284,7 +333,7 @@ export default function Profil({ onLogout }) {
                         value={formData.email}
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 bg-white border border-[#d4c6a6] rounded-xl focus:ring-1 focus:ring-[#4a2515] focus:border-[#4a2515] outline-none transition-all text-[#2D1E17] shadow-sm"
-                        placeholder="Enter email"
+                        placeholder="Masukkan email"
                       />
                     </div>
                   </div>
@@ -298,7 +347,7 @@ export default function Profil({ onLogout }) {
                     onClick={handleCancel}
                     className="flex-1 px-4 py-3 bg-[#fcf7e8] text-[#2D1E17] rounded-2xl font-semibold shadow-sm transition-colors"
                   >
-                    Cancel
+                    Batal
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02, backgroundColor: "#3e1f0d" }}
@@ -306,7 +355,7 @@ export default function Profil({ onLogout }) {
                     onClick={handleSave}
                     className="flex-1 px-4 py-3 bg-[#4a2515] text-[#fefae0] rounded-2xl font-semibold shadow-md transition-all"
                   >
-                    Save Changes
+                    Simpan Perubahan
                   </motion.button>
                 </div>
               </div>
@@ -324,7 +373,7 @@ export default function Profil({ onLogout }) {
       >
         <div className="bg-white rounded-2xl py-4 px-6 inline-block shadow-md border border-[#d4c6a6]">
           <p className="text-sm text-[#2D1E17]/80">
-            &copy; {new Date().getFullYear()} Raema Perpustakaan Digital. All rights reserved.
+            &copy; {new Date().getFullYear()} Raema Perpustakaan Digital. Semua hak cipta dilindungi.
           </p>
         </div>
       </motion.footer>

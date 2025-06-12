@@ -1,55 +1,112 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCalendarAlt, FaSearch, FaCheck, FaArrowLeft } from 'react-icons/fa';
-import "./index.css";
+
+// Custom Hook untuk Debounce
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+// Helper function untuk format tanggal
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
 
 export default function Peminjaman() {
-  const [loans, setLoans] = useState([]);
+  const [allLoans, setAllLoans] = useState([]); // State untuk menampung semua data dari server
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
+  
+  const debouncedSearchTerm = useDebounce(searchTerm, 300); // Pencarian lebih responsif
   const token = localStorage.getItem('token');
-  const limit = 10; // jumlah data per halaman
 
-  // Fetch data peminjaman dengan paging dan filter dari backend
-  const fetchLoans = () => {
+  // Fetch semua data peminjaman
+  const fetchAllLoans = useCallback(() => {
     setLoading(true);
-    // Query params untuk paging & filter status jika bukan 'Semua'
-    let url = `https://rem-library.up.railway.app/borrows?page=${page}&limit=${limit}`;
-    if (statusFilter !== 'Semua') {
-      url += `&status=${encodeURIComponent(statusFilter)}`;
-    }
+    setError(null);
+    // Ambil semua data sekaligus dengan limit yang besar
+    const url = `https://rem-library.up.railway.app/borrows?limit=1000`; 
 
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
-        if (!res.ok) throw new Error('Gagal mengambil data peminjaman');
+        if (!res.ok) {
+            return res.json().then(errData => {
+                throw new Error(errData.message || 'Gagal mengambil data peminjaman');
+            }).catch(() => {
+                throw new Error(`Gagal mengambil data, status: ${res.status}`);
+            });
+        }
         return res.json();
       })
       .then(data => {
-        // Asumsi response backend: { data: [...], totalPages: x }
-        setLoans(data.data);
-        setTotalPages(data.totalPages);
-        setLoading(false);
+        if (data && Array.isArray(data.data)) {
+          setAllLoans(data.data);
+        } else {
+          // Fallback untuk struktur data lama jika masih ada
+           if (data && Array.isArray(data)) {
+             setAllLoans(data);
+           } else {
+             throw new Error('Struktur data dari server tidak valid.');
+           }
+        }
       })
       .catch(err => {
         setError(err.message);
+        setAllLoans([]);
+      })
+      .finally(() => {
         setLoading(false);
       });
-  };
+  }, [token]);
 
   useEffect(() => {
-    fetchLoans();
-  }, [page, statusFilter]);
+    fetchAllLoans();
+  }, [fetchAllLoans]);
 
-  // Update status pengembalian via PUT
-  const updateLoan = async (id, updateData) => {
+  // --- LOGIKA FILTER DAN SEARCH DI FRONTEND ---
+  const filteredLoans = useMemo(() => {
+    return allLoans
+      .filter(loan => {
+        // Filter berdasarkan status
+        const isOverdue = loan.status === 'Dipinjam' && new Date(loan.dueDate) < new Date();
+        const finalStatus = isOverdue ? 'Terlambat' : loan.status;
+
+        if (statusFilter === 'Semua') {
+          return true; // Tampilkan semua jika filter 'Semua'
+        }
+        return finalStatus === statusFilter;
+      })
+      .filter(loan => {
+        // Filter berdasarkan pencarian
+        const bookTitle = loan.book?.title?.toLowerCase() || '';
+        const memberName = loan.user?.username?.toLowerCase() || '';
+        const search = debouncedSearchTerm.toLowerCase();
+        
+        return bookTitle.includes(search) || memberName.includes(search);
+      });
+  }, [allLoans, statusFilter, debouncedSearchTerm]);
+
+
+  const updateLoanStatus = async (id, newStatus) => {
     try {
       const res = await fetch(`https://rem-library.up.railway.app/borrows/${id}`, {
         method: 'PUT',
@@ -57,77 +114,67 @@ export default function Peminjaman() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({ 
+            status: newStatus,
+            ...(newStatus === 'Dikembalikan' && { returnDate: new Date().toISOString() })
+         }),
       });
 
-      if (!res.ok) throw new Error('Gagal mengupdate data peminjaman');
-
-      // Refresh data setelah update
-      fetchLoans();
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Gagal mengupdate status.');
+      }
+      
+      alert('Status berhasil diupdate!');
+      fetchAllLoans(); // Muat ulang data untuk menampilkan perubahan
     } catch (err) {
-      alert(err.message);
+      alert(`Error: ${err.message}`);
     }
   };
 
-  // Fungsi pengembalian buku
-  const returnBook = (loan) => {
+  const handleReturnBook = (loan) => {
     if (loan.status === 'Dikembalikan') return;
-
-    updateLoan(loan.id, { status: 'Dikembalikan', returnDate: new Date().toISOString().split('T')[0] });
+    const isConfirmed = window.confirm(`Apakah Anda yakin ingin mengembalikan buku "${loan.book?.title}"?`);
+    if (isConfirmed) {
+      updateLoanStatus(loan.id, 'Dikembalikan');
+    }
   };
-
-  // Filter pencarian manual di frontend
-  const filteredLoans = loans.filter(loan => {
-    const bookTitle = loan.book?.title || '';
-    const memberName = loan.user?.name || '';
-    const searchMatch =
-      bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      memberName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return searchMatch;
-  });
 
   const calculateOverdueDays = (dueDate) => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+
     const diffTime = today - due;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
 
-  if (loading) return <div className="p-6">Loading data peminjaman...</div>;
-  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
-
   return (
-    <div className="min-h-screen bg-[#fff9e6] p-6">
+    <div className="min-h-screen bg-[#fefae0] p-6">
       <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center">
-          <Link to="/admin/dashboard" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10">
-            <FaArrowLeft className="text-[#2D1E17]" />
-          </Link>
-          <h1 className="text-3xl font-bold text-[#2D1E17]">
-            <FaCalendarAlt className="inline mr-3" />
-            Manajemen Peminjaman
-          </h1>
-        </div>
+         <div className="flex items-center">
+           <Link to="/admin/dashboard" className="mr-4 p-2 rounded-full hover:bg-[#2D1E17]/10 transition-colors"><FaArrowLeft className="text-[#2D1E17]" /></Link>
+           <h1 className="text-3xl font-bold text-[#2D1E17]"><FaCalendarAlt className="inline mr-3" />Manajemen Peminjaman</h1>
+         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+      <div className="bg-white p-4 rounded-xl shadow-lg mb-6 border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative col-span-2">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#2D1E17]" />
+          <div className="relative md:col-span-2">
+            <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Cari berdasarkan judul buku atau nama anggota..."
-              className="w-full pl-10 pr-4 py-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50"
+              placeholder="Cari judul buku atau nama pengguna..."
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d4c6a6] focus:border-[#4a2515] transition-colors"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-
-          <div>
+          <div className="relative">
             <select
-              className="w-full p-2 border border-[#2D1E17]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D1E17]/50 text-[#2D1E17]"
+              className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d4c6a6] focus:border-[#4a2515] text-[#2D1E17] appearance-none bg-white pr-10"
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
             >
@@ -136,99 +183,82 @@ export default function Peminjaman() {
               <option value="Dikembalikan">Dikembalikan</option>
               <option value="Terlambat">Terlambat</option>
             </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
         <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-[#2D1E17] text-[#fff9e6]">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="px-6 py-3 text-left">Buku</th>
-                <th className="px-6 py-3 text-left">Anggota</th>
-                <th className="px-6 py-3 text-left">Tanggal Pinjam</th>
-                <th className="px-6 py-3 text-left">Jatuh Tempo</th>
-                <th className="px-6 py-3 text-left">Tanggal Kembali</th>
-                <th className="px-6 py-3 text-left">Status</th>
-                <th className="px-6 py-3 text-left">Aksi</th>
+                <th className="px-6 py-4 text-left font-semibold uppercase tracking-wider">Buku</th>
+                <th className="px-6 py-4 text-left font-semibold uppercase tracking-wider">Anggota</th>
+                <th className="px-6 py-4 text-left font-semibold uppercase tracking-wider">Tanggal Pinjam</th>
+                <th className="px-6 py-4 text-left font-semibold uppercase tracking-wider">Jatuh Tempo</th>
+                <th className="px-6 py-4 text-left font-semibold uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left font-semibold uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
-            <tbody>
-              {filteredLoans.length > 0 ? (
-                filteredLoans.map(loan => (
-                  <tr key={loan.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-[#2D1E17]">{loan.book?.title || '-'}</div>
-                      <div className="text-sm text-gray-600">ID: {loan.book?.id || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{loan.user?.name || '-'}</div>
-                      <div className="text-sm text-gray-600">ID: {loan.user?.id || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4">{loan.loanDate}</td>
-                    <td className={`px-6 py-4 ${loan.status === 'Terlambat' ? 'text-red-600' : ''}`}>
-                      {loan.dueDate}
-                      {loan.status === 'Terlambat' && (
-                        <div className="text-xs text-red-500">
-                          {calculateOverdueDays(loan.dueDate)} hari terlambat
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">{loan.returnDate || '-'}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        loan.status === 'Dipinjam' ? 'bg-blue-100 text-blue-800' :
-                        loan.status === 'Dikembalikan' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {loan.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {loan.status !== 'Dikembalikan' && (
-                        <button
-                          onClick={() => returnBook(loan)}
-                          className="flex items-center px-3 py-1 bg-[#2D1E17] text-[#fff9e6] rounded text-sm hover:bg-[#2D1E17]/90"
-                        >
-                          <FaCheck className="mr-1" /> Kembalikan
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr><td colSpan="6" className="text-center py-16 text-gray-500">Memuat data...</td></tr>
+              ) : error ? (
+                <tr><td colSpan="6" className="text-center py-16 text-red-500 font-medium">{error}</td></tr>
+              ) : filteredLoans.length > 0 ? (
+                filteredLoans.map(loan => {
+                  const isOverdue = loan.status === 'Dipinjam' && new Date(loan.dueDate) < new Date();
+                  const overdueDays = isOverdue ? calculateOverdueDays(loan.dueDate) : 0;
+                  const finalStatus = isOverdue ? 'Terlambat' : loan.status;
+
+                  return (
+                    <tr key={loan.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-800">{loan.book?.title || '-'}</div>
+                        <div className="text-xs text-gray-500">ID Buku: {loan.book?.id || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-800">{loan.user?.username || '-'}</div>
+                        <div className="text-xs text-gray-500">ID User: {loan.user?.id || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-600">{formatDate(loan.borrowDate)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={isOverdue ? 'text-red-600 font-semibold' : 'text-gray-600'}>{formatDate(loan.dueDate)}</div>
+                        {isOverdue && <div className="text-xs text-red-500">{overdueDays} hari terlambat</div>}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                           finalStatus === 'Dikembalikan' ? 'bg-green-100 text-green-800' :
+                           finalStatus === 'Terlambat' ? 'bg-red-100 text-red-800' :
+                           'bg-blue-100 text-blue-800'
+                         }`}>
+                           {finalStatus}
+                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {loan.status !== 'Dikembalikan' && (
+                          <button
+                            onClick={() => handleReturnBook(loan)}
+                            className="flex items-center px-3 py-1 bg-[#2D1E17] text-white rounded-lg text-xs font-semibold hover:bg-[#4a2515] transition-colors"
+                          >
+                            <FaCheck className="mr-1.5" /> Kembalikan
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })
               ) : (
-                <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
-                    Tidak ada data peminjaman yang ditemukan
-                  </td>
-                </tr>
+                <tr><td colSpan="6" className="text-center py-16 text-gray-500">Tidak ada data yang cocok.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-6 space-x-3">
-        <button
-          disabled={page <= 1}
-          onClick={() => setPage(page - 1)}
-          className={`px-3 py-1 rounded bg-[#2D1E17] text-[#fff9e6] hover:bg-[#2D1E17]/90 disabled:opacity-50`}
-        >
-          Sebelumnya
-        </button>
-        <span className="px-3 py-1 rounded border border-[#2D1E17] text-[#2D1E17]">
-          Halaman {page} / {totalPages}
-        </span>
-        <button
-          disabled={page >= totalPages}
-          onClick={() => setPage(page + 1)}
-          className={`px-3 py-1 rounded bg-[#2D1E17] text-[#fff9e6] hover:bg-[#2D1E17]/90 disabled:opacity-50`}
-        >
-          Selanjutnya
-        </button>
-      </div>
+      {/* Paginasi disembunyikan karena filter dilakukan di frontend */}
     </div>
   );
 }

@@ -87,41 +87,56 @@ export default function EditBuku() {
 
   // Submit update buku
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!judul.trim() || !pengarang.trim() || kategoriDipilih.length === 0) {
-      setServerError('Judul, pengarang, dan kategori harus diisi.');
-      return;
-    }
-    setServerError(null);
+  e.preventDefault();
 
-    fetch(`https://rem-library.up.railway.app/books/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: judul,
-        author: pengarang,
-        description: deskripsi,
-        categoryIds: kategoriDipilih, // sesuaikan dengan backend (misal: categoryIds atau categories)
-      }),
+  if (!judul.trim() || !pengarang.trim() || kategoriDipilih.length === 0) {
+    setServerError('Judul, pengarang, dan kategori harus diisi.');
+    return;
+  }
+
+  setServerError(null);
+
+  // Ubah isi categoryIds menjadi array angka
+  const kategoriDipilihAsNumber = kategoriDipilih.map((id) =>
+    id === "" ? null : Number(id)
+  );
+
+  console.log("Data dikirim ke backend:", {
+  title: judul,
+  author: pengarang,
+  description: deskripsi,
+  categoryIds: kategoriDipilihAsNumber,
+});
+
+  fetch(`https://rem-library.up.railway.app/books/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      title: judul,
+      author: pengarang,
+      description: deskripsi,
+      categoryIds: kategoriDipilihAsNumber, // Dipastikan sudah array of numbers/null
+    }),
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Gagal memperbarui buku.');
+      }
+      return res.json();
     })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || 'Gagal memperbarui buku.');
-        }
-        return res.json();
-      })
-      .then(() => {
-        alert('Buku berhasil diperbarui.');
-        navigate('/admin/manajemen-buku'); // ganti sesuai route daftar buku
-      })
-      .catch((err) => {
-        setServerError(err.message);
-      });
-  };
+    .then(() => {
+      alert('Buku berhasil diperbarui.');
+      navigate('/admin/manajemen-buku');
+    })
+    .catch((err) => {
+      setServerError(err.message);
+    });
+};
+
 
   if (loading) {
     return (
