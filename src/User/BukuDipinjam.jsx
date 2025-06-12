@@ -1,17 +1,82 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, BookOpen, CheckCircle, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+// Tambahkan Library di sini
+import { Loader2, BookOpen, CheckCircle, XCircle, AlertCircle, Library } from 'lucide-react'; 
 
 const API_BASE = 'https://rem-library.up.railway.app/borrows';
 
-export default function BukuDipinjam() {
+// Custom Modal for Confirmation and Messages (replaces alert/confirm)
+const ModalKonfirmasi = ({ show, onClose, onConfirm, pesan, title, isError = false }) => {
+  if (!show) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4"
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        className="bg-gradient-to-br from-[#F5F5DC] to-[#FAEBD7] rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-[#D2B48C]/20"
+      >
+        <div className="w-16 h-16 bg-gradient-to-br from-[#3C2A21] to-[#2A1F1A] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <AlertCircle size={28} className="text-[#D2B48C]" />
+        </div>
+        <p className={`mb-8 text-lg font-medium leading-relaxed ${isError ? 'text-red-600' : 'text-[#2A1F1A]'}`}>
+          {pesan}
+        </p>
+        <div className="flex justify-center gap-3">
+          {onConfirm && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onConfirm}
+              className="bg-gradient-to-r from-[#3C2A21] to-[#2A1F1A] hover:from-[#2A1F1A] hover:to-[#1A1411] text-[#F5F5DC] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              Ya, Lanjutkan
+            </motion.button>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onClose}
+            className="bg-[#D2B48C] hover:bg-[#C5A572] text-[#2A1F1A] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            {onConfirm ? 'Batal' : 'Tutup'}
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default function BorrowedBooks() {
   const [borrows, setBorrows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [returningId, setReturningId] = useState(null);
+  const [modal, setModal] = useState({ show: false, pesan: "", aksi: null, isError: false }); // State for custom modal
 
+  // Ambil token dari localStorage (atau sesuaikan dari context/auth state)
   const token = localStorage.getItem('token');
 
+  // Function to show custom message box
+  const showMessageBox = (message, isError = false, action = null) => {
+    setModal({
+      show: true,
+      pesan: message,
+      aksi: action,
+      isError: isError,
+    });
+  };
+
+  const closeModal = () => {
+    setModal({ show: false, pesan: "", aksi: null, isError: false });
+  };
+
+  // Fetch borrowed books
   useEffect(() => {
     if (!token) {
       setError('User not authenticated');
@@ -23,25 +88,19 @@ export default function BukuDipinjam() {
       try {
         const res = await fetch(`${API_BASE}/my`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`,
           },
         });
-
         if (!res.ok) {
-          let errMsg = `Error ${res.status}: ${res.statusText}`;
-          try {
-            const errData = await res.json();
-            if (errData.message) errMsg = errData.message;
-          } catch {
-            // ignore json parse error
-          }
-          throw new Error(errMsg);
+          const errorData = await res.json();
+          throw new Error(errorData.message || `Error ${res.status}: ${res.statusText}`);
         }
-
+        // Backend's getBorrowsByUserId returns an array directly, not an object with 'data'
         const data = await res.json();
-        setBorrows(data);
+        setBorrows(data); // Directly set the array
         setError(null);
       } catch (err) {
+        console.error("Fetch borrows error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -51,263 +110,236 @@ export default function BukuDipinjam() {
     fetchBorrows();
   }, [token]);
 
-  const handleReturn = async (borrowId) => {
-    if (!token) {
-      alert('User not authenticated');
-      return;
-    }
+  // Handle return confirmation
+  const konfirmasiKembalikan = (borrowId, bookTitle) => {
+    showMessageBox(
+      `Apakah Anda yakin ingin mengembalikan buku "${bookTitle}"?`,
+      false, // Not an error message
+      () => handleReturn(borrowId) // Action to perform on confirm
+    );
+  };
 
-    if (!window.confirm('Apakah Anda yakin ingin mengembalikan buku ini?')) {
+  // Handle return action
+  const handleReturn = async (borrowId) => {
+    closeModal(); // Close the confirmation modal
+
+    if (!token) {
+      showMessageBox('User not authenticated', true);
       return;
     }
 
     setReturningId(borrowId);
-
     try {
+      // Send PUT request to /borrows/:id with status 'Dikembalikan'
       const res = await fetch(`${API_BASE}/${borrowId}/return`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json', // Specify content type as we send a body
+          'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({ status: 'Dikembalikan' }), // Send the status to update
       });
 
       if (!res.ok) {
-        let errMsg = 'Failed to return book';
-        try {
-          const errData = await res.json();
-          if (errData.message) errMsg = errData.message;
-        } catch {
-          // ignore json parse error
-        }
-        throw new Error(errMsg);
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to return book');
       }
 
-      // Update local state: set returnDate now so UI langsung update
+      // Update local state to reflect the returned status
       setBorrows((prev) =>
         prev.map((b) =>
-          b.id === borrowId ? { ...b, returnDate: new Date().toISOString() } : b
+          b.id === borrowId ? { ...b, returnDate: new Date().toISOString(), status: 'Dikembalikan' } : b
         )
       );
-
-      alert('Buku berhasil dikembalikan');
+      showMessageBox('Buku berhasil dikembalikan!', false);
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      console.error("Return book error:", err);
+      showMessageBox(`Error: ${err.message}`, true);
     } finally {
       setReturningId(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#fff9e6] via-[#fef7e0] to-[#f5f0e8] relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-[#8B4513] rounded-full blur-3xl"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-[#A0522D] rounded-full blur-2xl"></div>
-        <div className="absolute bottom-20 left-20 w-40 h-40 bg-[#D2B48C] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-40 right-10 w-28 h-28 bg-[#CD853F] rounded-full blur-2xl"></div>
-      </div>
-      
-      {/* Subtle Book Pattern */}
-      <div className="absolute inset-0 opacity-3" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232D1E17' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-      }}>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#F5F5DC] via-[#FAEBD7] to-[#F0E68C]/20 p-6">
+      <div className="max-w-5xl mx-auto">
+        <ModalKonfirmasi
+          show={modal.show}
+          onClose={closeModal}
+          onConfirm={modal.aksi}
+          pesan={modal.pesan}
+          isError={modal.isError}
+        />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <div className="mb-6">
-          <Link 
-            to="/user/dashboard"
-            className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm hover:bg-white/90 text-[#2D1E17] font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-[#2D1E17]/10"
-          >
-            <ArrowLeft size={20} />
-            <span>Kembali ke Dashboard</span>
-          </Link>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#2D1E17] to-[#8B4513] rounded-2xl shadow-2xl mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-            <BookOpen size={36} className="text-[#fff9e6]" />
+        {/* Header Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
+          {/* Back Button */}
+          <div className="mb-6">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.history.back()}
+              className="inline-flex items-center gap-2 text-[#3C2A21] hover:text-[#2A1F1A] font-medium transition-colors duration-200 group"
+            >
+              <div className="w-8 h-8 bg-[#D2B48C]/20 group-hover:bg-[#D2B48C]/30 rounded-lg flex items-center justify-center transition-colors duration-200">
+                <span className="text-lg">←</span>
+              </div>
+              <span>Kembali ke Dashboard</span>
+            </motion.button>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-[#2D1E17] via-[#8B4513] to-[#A0522D] bg-clip-text text-transparent mb-4">
-            Koleksi Buku Saya
-          </h1>
-          <p className="text-[#2D1E17]/70 text-lg font-medium max-w-2xl mx-auto">
-            Kelola dan pantau buku-buku yang sedang Anda pinjam dengan mudah dan praktis
-          </p>
-        </div>
+
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#3C2A21] to-[#2A1F1A] rounded-2xl mb-4 shadow-lg">
+              <BookOpen size={28} className="text-[#D2B48C]" />
+            </div>
+            <h1 className="text-3xl font-light text-[#2A1F1A] mb-2">
+              Buku yang Sedang <span className="font-medium text-[#3C2A21]">Dipinjam</span>
+            </h1>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#D2B48C] to-[#DEB887] mx-auto rounded-full"></div>
+          </div>
+        </motion.div>
 
         {/* Loading State */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-10 shadow-2xl border border-[#2D1E17]/10">
-              <Loader2 className="animate-spin text-[#8B4513] mb-4 mx-auto" size={48} />
-              <p className="text-[#2D1E17] font-semibold text-lg text-center">Memuat koleksi buku Anda...</p>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col justify-center items-center py-20"
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-[#3C2A21] to-[#2A1F1A] rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <Loader2 className="animate-spin text-[#D2B48C]" size={24} />
             </div>
-          </div>
+            <p className="text-lg text-[#2A1F1A] font-light">Memuat daftar buku...</p>
+          </motion.div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="bg-gradient-to-r from-red-50/90 to-orange-50/90 backdrop-blur-sm border-l-4 border-red-500 rounded-xl p-6 shadow-lg mb-8">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-red-800 font-semibold text-lg">{error}</p>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-2xl p-6 mb-6 shadow-lg"
+          >
+            <div className="flex items-start gap-3">
+              <XCircle className="text-red-500 mt-1" size={20} />
+              <div className="flex-1">
+                <p className="text-red-700 font-medium mb-2">Terjadi kesalahan</p>
+                <p className="text-red-600 text-sm mb-4">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                >
+                  Coba Lagi
+                </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Empty State */}
         {!loading && !error && borrows.length === 0 && (
-          <div className="text-center py-20">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-2xl border border-[#2D1E17]/10 max-w-lg mx-auto">
-              <div className="w-24 h-24 bg-gradient-to-br from-[#fff9e6] to-[#f5f0e8] border-2 border-[#2D1E17]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpen size={40} className="text-[#8B4513]" />
-              </div>
-              <h3 className="text-2xl font-bold text-[#2D1E17] mb-3">Belum Ada Buku</h3>
-              <p className="text-[#2D1E17]/70 text-lg">Anda belum meminjam buku apapun saat ini.</p>
-              <Link 
-                to="/user/dashboard"
-                className="inline-block mt-6 bg-gradient-to-r from-[#2D1E17] to-[#8B4513] text-[#fff9e6] font-semibold px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300"
-              >
-                Jelajahi Koleksi Buku
-              </Link>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20"
+          >
+            <div className="w-20 h-20 bg-gradient-to-br from-[#D2B48C]/20 to-[#DEB887]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <BookOpen size={36} className="text-[#D2B48C]" />
             </div>
-          </div>
+            <h3 className="text-xl font-medium text-[#2A1F1A] mb-2">Belum ada buku yang dipinjam</h3>
+            <p className="text-[#3C2A21]/70 max-w-md mx-auto">Mulai pinjam buku dari halaman daftar buku untuk melihat riwayat peminjaman Anda di sini.</p>
+          </motion.div>
         )}
 
-        {/* Books Grid */}
-        <div className="grid gap-6 sm:gap-8">
-          {borrows.map(({ id, book, borrowDate, dueDate, returnDate }) => {
+        {/* Books List */}
+        <div className="space-y-4">
+          {borrows.map(({ id, book, borrowDate, returnDate, fineAmount }, index) => {
             const isReturned = Boolean(returnDate);
-            const isOverdue = !isReturned && dueDate && new Date(dueDate) < new Date();
-            
+            const borrowDt = new Date(borrowDate);
+            const returnDt = returnDate ? new Date(returnDate) : null;
+
             return (
-              <div
+              <motion.div
                 key={id}
-                className={`group relative bg-white/80 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-xl border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 ${
-                  isReturned ? 'bg-gradient-to-br from-green-50/80 to-emerald-50/80 border-green-300/50' :
-                  isOverdue ? 'bg-gradient-to-br from-red-50/80 to-pink-50/80 border-red-300/50' : 
-                  'border-[#2D1E17]/10'
-                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-[#D2B48C]/10 overflow-hidden"
               >
-                {/* Decorative Corner */}
-                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-[#2D1E17]/5 to-transparent rounded-tr-3xl"></div>
-
-                {/* Status Badge */}
-                <div className="absolute top-4 right-4 z-10">
-                  {isReturned ? (
-                    <div className="flex items-center gap-2 bg-green-100/90 text-green-800 px-4 py-2 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm">
-                      <CheckCircle size={16} />
-                      Dikembalikan
-                    </div>
-                  ) : isOverdue ? (
-                    <div className="bg-red-100/90 text-red-800 px-4 py-2 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm">
-                      Terlambat
-                    </div>
-                  ) : (
-                    <div className="bg-[#D2B48C]/80 text-[#2D1E17] px-4 py-2 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm">
-                      Dipinjam
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-                  {/* Book Info */}
-                  <div className="flex-1 pr-4">
-                    <div className="flex items-start gap-6">
-                      {/* Book Cover */}
-                      <div className="flex-shrink-0 w-20 h-28 bg-gradient-to-br from-[#2D1E17] to-[#8B4513] rounded-xl shadow-xl flex items-center justify-center transform -rotate-2 group-hover:rotate-0 transition-transform duration-500 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                        <BookOpen size={28} className="text-[#fff9e6] relative z-10" />
-                        <div className="absolute top-1 left-1 w-1 h-24 bg-[#fff9e6]/20 rounded-full"></div>
-                      </div>
-                      
-                      {/* Book Details */}
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-xl sm:text-2xl font-bold text-[#2D1E17] mb-3 line-clamp-2 leading-tight">
-                          {book.title}
-                        </h2>
-                        <p className="text-[#8B4513] font-semibold mb-6 text-lg">
-                          oleh {book.author}
-                        </p>
-                        
-                        {/* Date Information */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3 text-sm">
-                            <span className="font-semibold text-[#2D1E17] min-w-[100px]">Dipinjam:</span>
-                            <span className="text-[#8B4513] bg-[#fff9e6]/60 px-4 py-2 rounded-full font-medium shadow-sm">
-                              {new Date(borrowDate).toLocaleDateString('id-ID', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              })}
-                            </span>
+                <div className="p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    {/* Book Info */}
+                    <div className="flex-1">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#3C2A21] to-[#2A1F1A] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                          <BookOpen size={20} className="text-[#D2B48C]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-[#2A1F1A] mb-1 truncate">{book.title}</h3>
+                          <p className="text-sm text-[#3C2A21]/70 mb-3">Oleh: <span className="font-medium">{book.author}</span></p>
+                          
+                          <div className="space-y-1 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#3C2A21]/60">Tanggal Pinjam:</span>
+                              <span className="font-medium text-[#2A1F1A]">
+                                {borrowDt.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                              </span>
+                            </div>
+                            
+                            {isReturned && (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[#3C2A21]/60">Tanggal Kembali:</span>
+                                  <span className="font-medium text-green-700">
+                                    {returnDt.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                  </span>
+                                </div>
+                                {fineAmount > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[#3C2A21]/60">Denda:</span>
+                                    <span className="font-bold text-red-600">
+                                      Rp {fineAmount.toLocaleString('id-ID')}
+                                    </span>
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </div>
-                          
-                          {dueDate && (
-                            <div className="flex items-center gap-3 text-sm">
-                              <span className="font-semibold text-[#2D1E17] min-w-[100px]">Jatuh Tempo:</span>
-                              <span className={`px-4 py-2 rounded-full font-medium shadow-sm ${
-                                isOverdue ? 'text-red-700 bg-red-100/80' : 'text-[#8B4513] bg-[#fff9e6]/60'
-                              }`}>
-                                {new Date(dueDate).toLocaleDateString('id-ID', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {isReturned && (
-                            <div className="flex items-center gap-3 text-sm">
-                              <span className="font-semibold text-[#2D1E17] min-w-[100px]">Dikembalikan:</span>
-                              <span className="text-green-700 bg-green-100/80 px-4 py-2 rounded-full font-medium shadow-sm">
-                                {new Date(returnDate).toLocaleDateString('id-ID', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Action Button */}
-                  <div className="flex-shrink-0">
-                    {!isReturned && (
-                      <button
-                        disabled={returningId === id}
-                        onClick={() => handleReturn(id)}
-                        className="w-full lg:w-auto bg-gradient-to-r from-[#2D1E17] to-[#8B4513] hover:from-[#1a0f0a] hover:to-[#654321] text-[#fff9e6] font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-[#2D1E17] disabled:hover:to-[#8B4513] transform hover:scale-105 active:scale-95"
-                      >
-                        {returningId === id ? (
-                          <div className="flex items-center justify-center gap-3">
-                            <Loader2 className="animate-spin" size={20} />
-                            <span>Mengembalikan...</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center gap-2">
-                            <CheckCircle size={20} />
-                            <span>Kembalikan Buku</span>
-                          </div>
-                        )}
-                      </button>
-                    )}
+                    {/* Action Button */}
+                    <div className="lg:flex-shrink-0">
+                      {isReturned ? (
+                        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-50 to-green-100 text-green-700 px-4 py-3 rounded-xl border border-green-200 font-medium">
+                          <CheckCircle size={18} />
+                          <span>Sudah Dikembalikan</span>
+                        </div>
+                      ) : (
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ scale: 1.02 }}
+                          disabled={returningId === id}
+                          onClick={() => konfirmasiKembalikan(id, book.title)}
+                          className="w-full lg:w-auto bg-gradient-to-r from-[#3C2A21] to-[#2A1F1A] hover:from-[#2A1F1A] hover:to-[#1A1411] text-[#F5F5DC] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {returningId === id ? (
+                            <Loader2 className="animate-spin" size={18} />
+                          ) : (
+                            <Library size={18} />
+                          )}
+                          <span>{returningId === id ? 'Memproses...' : 'Kembalikan Buku'}</span>
+                        </motion.button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
